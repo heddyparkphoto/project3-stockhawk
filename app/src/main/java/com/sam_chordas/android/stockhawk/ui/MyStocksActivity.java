@@ -5,20 +5,24 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -36,7 +40,10 @@ import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 
-public class MyStocksActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+public class MyStocksActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<Cursor>,
+        SharedPreferences.OnSharedPreferenceChangeListener {
+    static final String LOG_TAG = MyStocksActivity.class.getSimpleName();
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -81,7 +88,7 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
-        mCursorAdapter = new QuoteCursorAdapter(this, null);
+        mCursorAdapter = new QuoteCursorAdapter(this, null, (TextView) findViewById(R.id.recycler_view_stocks_empty));
         recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
                 new RecyclerViewItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View v, int position) {
@@ -161,6 +168,9 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     public void onResume() {
         super.onResume();
         getLoaderManager().restartLoader(CURSOR_LOADER_ID, null, this);
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
     public void networkToast(){
@@ -217,10 +227,52 @@ public class MyStocksActivity extends AppCompatActivity implements LoaderManager
     public void onLoadFinished(Loader<Cursor> loader, Cursor data){
         mCursorAdapter.swapCursor(data);
         mCursor = data;
-    }
 
+        updateEmptyView();
+    }
     @Override
     public void onLoaderReset(Loader<Cursor> loader){
         mCursorAdapter.swapCursor(null);
+    }
+
+    private void updateEmptyView() {
+        if (mCursorAdapter.getItemCount()==0){
+            TextView emptyview = (TextView) findViewById(R.id.recycler_view_stocks_empty);
+            if (emptyview!=null){
+                String message = getString(R.string.empty_view_textview);
+
+                int status = Utils.getStockStatus(this);
+                switch (status){
+                    case StockTaskService.STOCK_STATUS_OK:
+                        break;
+                    case StockTaskService.STOCK_STATUS_NOT_CONNECTED:
+                        message = getString(R.string.empty_network_not_connected);
+                        break;
+
+                    case StockTaskService.STOCK_STATUS_UNKNOWN:
+                    default:
+                        message = getString(R.string.empty_status_unknown);
+                        break;
+
+                }
+
+                emptyview.setText(message);
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        super.onPause();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Log.d(LOG_TAG, "Shared pref changed! Key is "+key);
+        if (key.compareTo(getString(R.string.pref_stock_status)) == 0){
+            updateEmptyView();
+        }
     }
 }

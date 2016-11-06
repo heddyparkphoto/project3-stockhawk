@@ -1,10 +1,16 @@
 package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.service.StockTaskService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,7 +27,7 @@ public class Utils {
 
   public static boolean showPercent = true;
 
-  public static ArrayList quoteJsonToContentVals(String JSON){
+  public static ArrayList quoteJsonToContentVals(String JSON) throws JSONException {
     ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
     JSONObject jsonObject = null;
     JSONArray resultsArray = null;
@@ -47,6 +53,7 @@ public class Utils {
       }
     } catch (JSONException e){
       Log.e(LOG_TAG, "String to JSON failed: " + e);
+      throw e;
     }
     return batchOperations;
   }
@@ -73,7 +80,7 @@ public class Utils {
     return change;
   }
 
-  public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject){
+  public static ContentProviderOperation buildBatchOperation(JSONObject jsonObject) throws JSONException {
     ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
         QuoteProvider.Quotes.CONTENT_URI);
     try {
@@ -92,7 +99,28 @@ public class Utils {
 
     } catch (JSONException e){
       e.printStackTrace();
+      throw e;
     }
     return builder.build();
+  }
+
+  @SuppressWarnings("ResourceType")  //Without this line, we cannot compile to return the IntDef we'd like to use.
+  public static @StockTaskService.StockStatusDefinitions int getStockStatus(Context context){
+
+    SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
+   // return shp.getInt(context.getString(R.string.pref_stock_status), StockTaskService.STOCK_STATUS_UNKNOWN);
+
+    if (isConnected(context)){
+      return StockTaskService.STOCK_STATUS_OK;
+    } else {
+      return StockTaskService.STOCK_STATUS_NOT_CONNECTED;
+    }
+  }
+
+  private static boolean isConnected(Context context){
+    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+    return (activeNetwork != null && activeNetwork.isConnectedOrConnecting());
   }
 }

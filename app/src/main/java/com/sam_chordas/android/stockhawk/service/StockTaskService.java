@@ -3,21 +3,31 @@ package com.sam_chordas.android.stockhawk.service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.OperationApplicationException;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
+import android.support.annotation.IntDef;
 import android.util.Log;
+
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
+import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.URLEncoder;
 
 /**
@@ -60,6 +70,7 @@ public class StockTaskService extends GcmTaskService{
       urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
         + "in (", "UTF-8"));
     } catch (UnsupportedEncodingException e) {
+      setStockStatus(mContext, STOCK_INVALID_NAME);
       e.printStackTrace();
     }
     if (params.getTag().equals("init") || params.getTag().equals("periodic")){
@@ -73,6 +84,7 @@ public class StockTaskService extends GcmTaskService{
           urlStringBuilder.append(
               URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
         } catch (UnsupportedEncodingException e) {
+          setStockStatus(mContext, STOCK_INVALID_NAME);
           e.printStackTrace();
         }
       } else if (initQueryCursor != null){
@@ -87,6 +99,7 @@ public class StockTaskService extends GcmTaskService{
         try {
           urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
         } catch (UnsupportedEncodingException e) {
+          setStockStatus(mContext, STOCK_INVALID_NAME);
           e.printStackTrace();
         }
       }
@@ -97,6 +110,7 @@ public class StockTaskService extends GcmTaskService{
       try {
         urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
       } catch (UnsupportedEncodingException e){
+        setStockStatus(mContext, STOCK_INVALID_NAME);
         e.printStackTrace();
       }
     }
@@ -113,6 +127,7 @@ public class StockTaskService extends GcmTaskService{
       try{
         getResponse = fetchData(urlString);
         result = GcmNetworkManager.RESULT_SUCCESS;
+        setStockStatus(mContext, STOCK_STATUS_OK);
         try {
           ContentValues contentValues = new ContentValues();
           // update ISCURRENT to 0 (false) so new data is current
@@ -125,13 +140,36 @@ public class StockTaskService extends GcmTaskService{
               Utils.quoteJsonToContentVals(getResponse));
         }catch (RemoteException | OperationApplicationException e){
           Log.e(LOG_TAG, "Error applying batch insert", e);
+        }catch (JSONException e){
+          Log.e(LOG_TAG, "Error Response returned threw JSONException", e);
+          return -99;
         }
       } catch (IOException e){
+        setStockStatus(mContext, STOCK_INVALID_SERVER);
         e.printStackTrace();
       }
     }
 
     return result;
+  }
+
+  /*
+    EmptyView: Provide Detailed info to help the user what went wrong when showing an empty screen.
+   */
+  @Retention(RetentionPolicy.SOURCE)
+  @IntDef ({STOCK_STATUS_OK, STOCK_INVALID_NAME, STOCK_STATUS_NOT_CONNECTED, STOCK_INVALID_SERVER, STOCK_STATUS_UNKNOWN})
+
+  public @interface StockStatusDefinitions{}
+  public static final int STOCK_STATUS_OK=0;
+  public static final int STOCK_INVALID_NAME=1;
+  public static final int STOCK_STATUS_NOT_CONNECTED=2;
+  public static final int STOCK_INVALID_SERVER=3;
+  public static final int STOCK_STATUS_UNKNOWN=4;
+
+  private static void setStockStatus(Context context, @StockStatusDefinitions int status){
+    SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences.Editor editor = shp.edit();
+    editor.putInt(context.getString(R.string.pref_stock_status), status).commit();
   }
 
 }

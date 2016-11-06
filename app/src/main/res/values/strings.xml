@@ -10,5 +10,11 @@
     <string name="input_hint">FB</string>
     <string name="input_prefill"></string>
     <string name="network_toast">Uh-oh! This app requires an internet connection</string>
+    <string name="empty_view_textview">No stock data to display!!</string>
+
+    <!--Empty data handling-->
+    <string name="pref_stock_status" translatable="false">stockStatusKey</string>
+    <string name="empty_network_not_connected">You don\'t have the network connection</string>
+    <string name="empty_status_unknown">Something went wrong but unknown reasons</string>
 
 </resources>
