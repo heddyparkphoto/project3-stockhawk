@@ -16,5 +16,6 @@
     <string name="pref_stock_status" translatable="false">stockStatusKey</string>
     <string name="empty_network_not_connected">You don\'t have the network connection</string>
     <string name="empty_status_unknown">Something went wrong but unknown reasons</string>
+    <string name="title_activity_detail">Stocks Detail</string>
 
 </resources>

@@ -89,11 +89,31 @@ public class MyStocksActivity extends AppCompatActivity
         getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
         mCursorAdapter = new QuoteCursorAdapter(this, null, (TextView) findViewById(R.id.recycler_view_stocks_empty));
+
+
         recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
                 new RecyclerViewItemClickListener.OnItemClickListener() {
                     @Override public void onItemClick(View v, int position) {
                         //TODO:
                         // do something on item click
+                        Log.d(LOG_TAG, "stop!");
+
+                        String itemSymbol = ((TextView)v.findViewById(R.id.stock_symbol)).getText().toString();
+
+                        // Let's try explicit Intent to launch the StockDetailActivity
+                        Intent intent = new Intent(mContext, StockDetailActivity.class);
+                        intent.putExtra("OF_STOCK", itemSymbol);
+                        startActivity(intent);
+
+//                        Cursor cursor = getContentResolver().query(QuoteProvider.Quotes.withSymbol(itemSymbol),
+//                                null, QuoteColumns.SYMBOL + "= ?",
+//                                new String[] { itemSymbol }, QuoteColumns.CREATED + " DESC");
+//
+//                        if (cursor!=null){
+//                            DatabaseUtils.dumpCursor(cursor);
+//                        }
+
+
                     }
                 }));
         recyclerView.setAdapter(mCursorAdapter);
@@ -275,4 +295,19 @@ public class MyStocksActivity extends AppCompatActivity
             updateEmptyView();
         }
     }
+
+
+    /*
+
+    2years worth, very long response that worked about AAPL
+
+    http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20%3D%20%22AAPL%22%20and%20startDate%20%3D%20%222012-09-11%22%20and%20endDate%20%3D%20%222014-02-11%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=
+
+     */
+
+    /*
+        This worked for retreiving only one price ('Close') column
+
+        http://query.yahooapis.com/v1/public/yql?q=select%20Close%20from%20yahoo.finance.historicaldata%20where%20symbol%20%3D%20%22AAPL%22%20and%20startDate%20%3D%20%222016-09-11%22%20and%20endDate%20%3D%20%222016-11-04%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=
+     */
 }
