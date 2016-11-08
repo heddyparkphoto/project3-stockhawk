@@ -28,9 +28,8 @@ public class HistoricalProvider {
         return builder.build();
     }
 
-
     @TableEndpoint(table = HistoricalDatabase.HISTORICAL)
-    public static class HISTORICAL {
+    public static class Historical {
         @ContentUri(
                 path = Path.HISTORICAL,
                 type = "vnd.android.cursor.dir/historical"
@@ -48,5 +47,6 @@ public class HistoricalProvider {
         public static Uri historicalOfSymbol(String symbol){
             return buildUri(Path.HISTORICAL, symbol);
         }
+
     }
 }

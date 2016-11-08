@@ -8,6 +8,8 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.sam_chordas.android.stockhawk.data.HistoricalColumns;
+import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
@@ -117,10 +119,67 @@ public class Utils {
     }
   }
 
-  private static boolean isConnected(Context context){
+  public static boolean isConnected(Context context){
     ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
     NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
     return (activeNetwork != null && activeNetwork.isConnectedOrConnecting());
+  }
+
+  public static ArrayList<ContentProviderOperation> historicalJsonContentVals(String JSON)
+                      throws JSONException
+  {
+    ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
+    JSONObject jsonObject = null;
+    JSONArray resultsArray = null;
+    try{
+      jsonObject = new JSONObject(JSON);
+      if (jsonObject != null && jsonObject.length() != 0){
+        jsonObject = jsonObject.getJSONObject("query");
+
+        resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
+
+        if (resultsArray != null && resultsArray.length() != 0){
+          for (int i = 0; i < resultsArray.length(); i++){
+            jsonObject = resultsArray.getJSONObject(i);
+            batchOperations.add(historicalBatchOperation(jsonObject));
+          }
+
+        }
+      }
+    } catch (JSONException e){
+      Log.e(LOG_TAG, "String to JSON failed: " + e);
+      throw e;
+    }
+    return batchOperations;
+  }
+
+  private static ContentProviderOperation historicalBatchOperation(JSONObject jsonObject) throws JSONException {
+    ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(
+            HistoricalProvider.Historical.CONTENT_URI);
+    try {
+      builder.withValue(HistoricalColumns.SYMBOL, jsonObject.getString("Symbol"));
+      builder.withValue(HistoricalColumns.DATE_TEXT, jsonObject.getString("Date"));
+      // HIGH LOW are REALs, using a convenience method to extract the json string to a float of two decimal point floats
+      builder.withValue(HistoricalColumns.HIGH, roundPrice(jsonObject.getString("High")));
+      builder.withValue(HistoricalColumns.LOW, roundPrice(jsonObject.getString("Low")));
+
+    } catch (JSONException e){
+      e.printStackTrace();
+      throw e;
+    }
+    return builder.build();
+  }
+
+  private static float roundPrice(String price) {
+
+    float returnVal;
+    if (null==price || price.length()==0){
+      return 0f;
+    } else {
+      String temp = truncateBidPrice(price);
+      returnVal = Float.parseFloat(temp);
+      return returnVal;
+    }
   }
 }

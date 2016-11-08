@@ -13,4 +13,6 @@ public class HistoricalDatabase {
     public static final int VERSION = 1;
 
     @Table(HistoricalColumns.class) public static final String HISTORICAL = "historical";
+
+
 }

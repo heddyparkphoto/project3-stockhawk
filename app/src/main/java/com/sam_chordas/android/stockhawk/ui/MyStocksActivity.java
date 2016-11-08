@@ -102,7 +102,7 @@ public class MyStocksActivity extends AppCompatActivity
 
                         // Let's try explicit Intent to launch the StockDetailActivity
                         Intent intent = new Intent(mContext, StockDetailActivity.class);
-                        intent.putExtra("OF_STOCK", itemSymbol);
+                        intent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, itemSymbol);
                         startActivity(intent);
 
 //                        Cursor cursor = getContentResolver().query(QuoteProvider.Quotes.withSymbol(itemSymbol),

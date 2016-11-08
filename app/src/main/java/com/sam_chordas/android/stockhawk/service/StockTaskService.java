@@ -15,6 +15,7 @@ import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
 import com.sam_chordas.android.stockhawk.R;
+import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
@@ -64,11 +65,18 @@ public class StockTaskService extends GcmTaskService{
       mContext = this;
     }
     StringBuilder urlStringBuilder = new StringBuilder();
+    // Base URL for the Yahoo query
+    urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
+
     try{
-      // Base URL for the Yahoo query
-      urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
-      urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
-        + "in (", "UTF-8"));
+      if (params.getTag().equals("historicalData")) {
+        String of_symbol = params.getExtras().getString("symbol_h");
+        urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
+                + "symbol = \"" + of_symbol + "\" and startDate = \"2015-09-01\" and endDate = \"2016-09-01\"", "UTF-8"));
+      } else {
+        urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
+                + "in (", "UTF-8"));
+      }
     } catch (UnsupportedEncodingException e) {
       setStockStatus(mContext, STOCK_INVALID_NAME);
       e.printStackTrace();
@@ -113,6 +121,8 @@ public class StockTaskService extends GcmTaskService{
         setStockStatus(mContext, STOCK_INVALID_NAME);
         e.printStackTrace();
       }
+    } else if (params.getTag().equals("historicalData")) {
+      // Nothing more todo...
     }
     // finalize the URL for the API query.
     urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
@@ -136,8 +146,15 @@ public class StockTaskService extends GcmTaskService{
             mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
                 null, null);
           }
-          mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-              Utils.quoteJsonToContentVals(getResponse));
+
+          if (params.getTag().equals("historicalData")){
+            // Historical DB
+            mContext.getContentResolver().applyBatch(HistoricalProvider.AUTHORITY,
+                    Utils.historicalJsonContentVals(getResponse));
+          } else {
+            mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
+                    Utils.quoteJsonToContentVals(getResponse));
+          }
         }catch (RemoteException | OperationApplicationException e){
           Log.e(LOG_TAG, "Error applying batch insert", e);
         }catch (JSONException e){
