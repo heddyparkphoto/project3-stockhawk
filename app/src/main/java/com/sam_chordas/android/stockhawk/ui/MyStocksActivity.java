@@ -96,23 +96,12 @@ public class MyStocksActivity extends AppCompatActivity
                     @Override public void onItemClick(View v, int position) {
                         //TODO:
                         // do something on item click
-                        Log.d(LOG_TAG, "stop!");
-
                         String itemSymbol = ((TextView)v.findViewById(R.id.stock_symbol)).getText().toString();
 
                         // Let's try explicit Intent to launch the StockDetailActivity
                         Intent intent = new Intent(mContext, StockDetailActivity.class);
                         intent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, itemSymbol);
                         startActivity(intent);
-
-//                        Cursor cursor = getContentResolver().query(QuoteProvider.Quotes.withSymbol(itemSymbol),
-//                                null, QuoteColumns.SYMBOL + "= ?",
-//                                new String[] { itemSymbol }, QuoteColumns.CREATED + " DESC");
-//
-//                        if (cursor!=null){
-//                            DatabaseUtils.dumpCursor(cursor);
-//                        }
-
 
                     }
                 }));

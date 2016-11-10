@@ -122,7 +122,7 @@ public class StockTaskService extends GcmTaskService{
         e.printStackTrace();
       }
     } else if (params.getTag().equals("historicalData")) {
-      // Nothing more todo...
+      // Nothing more than having appended a paths to the UrlStringBuilder above.
     }
     // finalize the URL for the API query.
     urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
@@ -148,10 +148,11 @@ public class StockTaskService extends GcmTaskService{
           }
 
           if (params.getTag().equals("historicalData")){
-            // Historical DB
+            // Historical DB insert
             mContext.getContentResolver().applyBatch(HistoricalProvider.AUTHORITY,
                     Utils.historicalJsonContentVals(getResponse));
           } else {
+            // This insert already existed for the Main screen and Quote DB
             mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
                     Utils.quoteJsonToContentVals(getResponse));
           }
