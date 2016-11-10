@@ -17,5 +17,6 @@
     <string name="empty_network_not_connected">You don\'t have the network connection</string>
     <string name="empty_status_unknown">Something went wrong but unknown reasons</string>
     <string name="title_activity_detail">Stocks Detail</string>
+    <string name="linechart_no_data">Loading data momentarily ...</string>
 
 </resources>

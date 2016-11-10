@@ -131,6 +131,7 @@ public class MyStocksActivity extends AppCompatActivity
                                         toast.show();
                                         return;
                                     } else {
+                                        Log.d(LOG_TAG, "Add new stock!");
                                         // Add the stock to DB
                                         mServiceIntent.putExtra("tag", "add");
                                         mServiceIntent.putExtra("symbol", input.toString());

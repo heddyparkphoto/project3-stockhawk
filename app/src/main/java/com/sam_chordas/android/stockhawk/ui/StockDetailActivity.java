@@ -35,12 +35,12 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
     private Intent mServiceIntent;
     private final static int HISTORICAL_CURSOR_LOADER = 4;
     private String mOfSymbol;
+    private LineChart mLineChart;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_line_graph);
-
 
         Intent intent = getIntent();
         if (intent!=null){
@@ -61,6 +61,7 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
                     well, at least that's what the intention is!  Intention not the android Intent!
                  */
                 else if (Utils.isConnected(this)){
+
                     getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
 
                     mServiceIntent = new Intent(this, StockIntentService.class);
@@ -78,8 +79,6 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
     }
 
     private void drawLineChart(Cursor cursor) {
-        LineChart mLineChart;
-        mLineChart = (LineChart) findViewById(R.id.linechart);
 
         ArrayList<Entry> entries = new ArrayList<>();
         ArrayList<String> dates = new ArrayList<>();
@@ -88,10 +87,15 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
         /*
             We can reach here without data if we needed a fresh data,
             and the StockTaskService is still running on a background thread;
-            set off this loader again.
+            set User-Friendly message and invoke invalidate() to have the LineChart wait
+            onLoadFinished() invokes this method again.
          */
         if (null==cursor || plotNum == 0){
-            Log.d(LOG_TAG, "drawLineChart - no data");
+
+            if (mLineChart!=null) {
+                mLineChart.setNoDataText(getString(R.string.linechart_no_data));
+                mLineChart.invalidate();
+            }
             return;
         }
 
@@ -118,6 +122,11 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
         //add to the sets
         lineDataSets.add(lineDataSet1);
 
+        // This may be a hack but have seen the mLineChart being null.  Re-get it to initiate.
+        if (null==mLineChart){
+            mLineChart = (LineChart) findViewById(R.id.linechart);
+        }
+
         //setData to the LineChart by constructing the LineData (xStringArray, LineDataSets)
         mLineChart.setData(new LineData(lineDataSets));
         mLineChart.setVisibleXRangeMaximum(35f);    // experiment on the phone to get good curve
@@ -126,8 +135,6 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
 
-        Log.d(LOG_TAG, "onCreateLoader");
-
         return new CursorLoader(this, HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
                 null, HistoricalColumns.SYMBOL + "= ?",
                 new String[] {mOfSymbol}, HistoricalColumns.DATE_TEXT+" ASC");
@@ -135,18 +142,18 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        Log.d(LOG_TAG, "onLoadFinished");
+
+        if (mLineChart!=null){
+            mLineChart.invalidate();
+        }
+
         drawLineChart(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
-        Log.d(LOG_TAG, "onLoaderReset");
-        // Placeholder if old graph must be cleared for some reason.  In such case make the mLineChart available.
-        //Clear the data in the mLineChart
 //        if (mLineChart!=null){
-
 //            Log.d(LOG_TAG, "onLoaderReset - mLineChart is not null.");
 //            mLineChart.clearValues();
 //        }
@@ -156,14 +163,17 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
     protected void onResume() {
         super.onResume();
 
-        // Placeholder if old graph must be cleared for some reason.  In such case make the mLineChart available.
-//        if (mLineChart!=null){
+        /*
+         We want to initialize and refresh (invalidate() seems to does that according to authors
+         every time here instead of onCreate() which only occurs once.
+        */
 
-            Log.d(LOG_TAG, "onResume"); // - mLineChart is not null.");
-//
-//        } else {
-//            Log.d(LOG_TAG, "onResume - mLineChart is NULL!!!");
-//        }
+        mLineChart = (LineChart) findViewById(R.id.linechart);
+        mLineChart.invalidate();
+
+        // Without init-ing here, there were no data - not sure it is the only way
+        // to ensure, but it is better than crashing.
+        getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
     }
 
 
