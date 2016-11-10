@@ -173,7 +173,7 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
 
         // Without init-ing here, there were no data - not sure it is the only way
         // to ensure, but it is better than crashing.
-        getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
+        getLoaderManager().restartLoader(HISTORICAL_CURSOR_LOADER, null, this);
     }
 
 
