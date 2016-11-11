@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
@@ -40,6 +38,8 @@ import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 
+import java.util.Locale;
+
 public class MyStocksActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor>,
         SharedPreferences.OnSharedPreferenceChangeListener {
@@ -60,17 +60,13 @@ public class MyStocksActivity extends AppCompatActivity
     private Context mContext;
     private Cursor mCursor;
     boolean isConnected;
+    private static String mNewStockName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
-        ConnectivityManager cm =
-                (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        isConnected = activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
+        isConnected = Utils.isConnected(this);
         setContentView(R.layout.activity_my_stocks);
         // The intent service is for executing immediate pulls from the Yahoo API
         // GCMTaskService can only schedule tasks, they cannot execute immediately
@@ -89,7 +85,6 @@ public class MyStocksActivity extends AppCompatActivity
         getLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
 
         mCursorAdapter = new QuoteCursorAdapter(this, null, (TextView) findViewById(R.id.recycler_view_stocks_empty));
-
 
         recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(this,
                 new RecyclerViewItemClickListener.OnItemClickListener() {
@@ -112,6 +107,7 @@ public class MyStocksActivity extends AppCompatActivity
         fab.attachToRecyclerView(recyclerView);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
+                mNewStockName = null;
                 if (isConnected){
                     new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
                             .content(R.string.content_test)
@@ -135,6 +131,7 @@ public class MyStocksActivity extends AppCompatActivity
                                         // Add the stock to DB
                                         mServiceIntent.putExtra("tag", "add");
                                         mServiceIntent.putExtra("symbol", input.toString());
+                                        mNewStockName = input.toString();
                                         startService(mServiceIntent);
                                     }
                                 }
@@ -246,27 +243,34 @@ public class MyStocksActivity extends AppCompatActivity
     }
 
     private void updateEmptyView() {
+        String message = getString(R.string.empty_view_textview);
+
+        int status = Utils.getStockStatus(this);
+        switch (status){
+            case StockTaskService.STOCK_STATUS_OK:
+                break;
+            case StockTaskService.STOCK_STATUS_NOT_CONNECTED:
+                message = getString(R.string.empty_network_not_connected);
+                break;
+            case StockTaskService.STOCK_INVALID_NAME:
+                message = getString(R.string.stock_not_found);
+                break;
+            case StockTaskService.STOCK_STATUS_UNKNOWN:
+            default:
+                message = getString(R.string.empty_status_unknown);
+                break;
+
+        }
+
         if (mCursorAdapter.getItemCount()==0){
             TextView emptyview = (TextView) findViewById(R.id.recycler_view_stocks_empty);
             if (emptyview!=null){
-                String message = getString(R.string.empty_view_textview);
-
-                int status = Utils.getStockStatus(this);
-                switch (status){
-                    case StockTaskService.STOCK_STATUS_OK:
-                        break;
-                    case StockTaskService.STOCK_STATUS_NOT_CONNECTED:
-                        message = getString(R.string.empty_network_not_connected);
-                        break;
-
-                    case StockTaskService.STOCK_STATUS_UNKNOWN:
-                    default:
-                        message = getString(R.string.empty_status_unknown);
-                        break;
-
-                }
-
                 emptyview.setText(message);
+            }
+        } else if (mNewStockName!=null && !mNewStockName.isEmpty()){
+            if (status==StockTaskService.STOCK_INVALID_NAME){
+                message = String.format(Locale.US, getString(R.string.stock_not_found), mNewStockName);
+                Toast.makeText(mContext, message, Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -275,6 +279,8 @@ public class MyStocksActivity extends AppCompatActivity
     protected void onPause() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        // clean up
+        mNewStockName = null;
         super.onPause();
     }
 

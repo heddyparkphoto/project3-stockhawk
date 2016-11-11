@@ -8,6 +8,7 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalColumns;
 import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
@@ -56,6 +57,8 @@ public class Utils {
     } catch (JSONException e){
       Log.e(LOG_TAG, "String to JSON failed: " + e);
       throw e;
+    } catch (Exception e){
+      Log.e(LOG_TAG, "Something went wrong, could not apply batch ops.");
     }
     return batchOperations;
   }
@@ -113,13 +116,13 @@ public class Utils {
   public static @StockTaskService.StockStatusDefinitions int getStockStatus(Context context){
 
     SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
-   // return shp.getInt(context.getString(R.string.pref_stock_status), StockTaskService.STOCK_STATUS_UNKNOWN);
 
-    if (isConnected(context)){
-      return StockTaskService.STOCK_STATUS_OK;
-    } else {
-      return StockTaskService.STOCK_STATUS_NOT_CONNECTED;
+    if (!isConnected(context)){
+      SharedPreferences.Editor editor = shp.edit();
+      editor.putInt(context.getString(R.string.pref_stock_status), StockTaskService.STOCK_STATUS_NOT_CONNECTED).commit();
     }
+
+   return shp.getInt(context.getString(R.string.pref_stock_status), StockTaskService.STOCK_STATUS_UNKNOWN);
   }
 
   public static boolean isConnected(Context context){

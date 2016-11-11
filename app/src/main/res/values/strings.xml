@@ -18,5 +18,7 @@
     <string name="empty_status_unknown">Something went wrong but unknown reasons</string>
     <string name="title_activity_detail">Stocks Detail</string>
     <string name="linechart_no_data">Loading data momentarily ...</string>
+    <string name="stock_not_found">Stock name %s could not be found.</string>
+    <string name="linechart_default">No chart data</string>
 
 </resources>

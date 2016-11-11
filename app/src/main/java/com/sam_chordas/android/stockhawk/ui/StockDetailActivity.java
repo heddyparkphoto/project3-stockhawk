@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
@@ -71,7 +72,9 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
                     mServiceIntent.putExtra("tag", "historicalData");
                     mServiceIntent.putExtra("symbol_h", mOfSymbol);
                     startService(mServiceIntent);
-               }
+               } else {
+                    Toast.makeText(this, getString(R.string.empty_network_not_connected), Toast.LENGTH_LONG).show();
+                }
             }
         } else {
             Log.d(LOG_TAG, "Intent is null. Cannot get symbol to look up.");
@@ -93,7 +96,11 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
         if (null==cursor || plotNum == 0){
 
             if (mLineChart!=null) {
-                mLineChart.setNoDataText(getString(R.string.linechart_no_data));
+                if (Utils.isConnected(this)) {
+                    mLineChart.setNoDataText(getString(R.string.linechart_no_data));
+                } else {
+                    mLineChart.setNoDataText(getString(R.string.linechart_default));
+                }
                 mLineChart.invalidate();
             }
             return;

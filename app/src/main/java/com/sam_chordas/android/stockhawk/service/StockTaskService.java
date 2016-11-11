@@ -30,6 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 /**
  * Created by sam_chordas on 9/30/15.
@@ -153,8 +154,17 @@ public class StockTaskService extends GcmTaskService{
                     Utils.historicalJsonContentVals(getResponse));
           } else {
             // This insert already existed for the Main screen and Quote DB
+
+            // Also trying to add invalid stock name from user input somehow....
+            ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
+            if (checkDbOperation==null || checkDbOperation.isEmpty()){
+              Log.d(LOG_TAG, "INVALID STOCK NAME.");
+              setStockStatus(mContext, STOCK_INVALID_NAME);
+              return result;
+            }
+
             mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-                    Utils.quoteJsonToContentVals(getResponse));
+                    checkDbOperation);
           }
         }catch (RemoteException | OperationApplicationException e){
           Log.e(LOG_TAG, "Error applying batch insert", e);
