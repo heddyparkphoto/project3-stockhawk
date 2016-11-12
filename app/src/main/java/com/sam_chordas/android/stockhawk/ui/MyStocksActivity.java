@@ -68,6 +68,7 @@ public class MyStocksActivity extends AppCompatActivity
         mContext = this;
         isConnected = Utils.isConnected(this);
         setContentView(R.layout.activity_my_stocks);
+
         // The intent service is for executing immediate pulls from the Yahoo API
         // GCMTaskService can only schedule tasks, they cannot execute immediately
         mServiceIntent = new Intent(this, StockIntentService.class);
@@ -187,8 +188,12 @@ public class MyStocksActivity extends AppCompatActivity
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
+
+        // Display both launcher icon and the title
+        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+
         actionBar.setTitle(mTitle);
+        actionBar.setIcon(R.mipmap.ic_launcher);
     }
 
     @Override
