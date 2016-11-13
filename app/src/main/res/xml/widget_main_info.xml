@@ -13,6 +13,9 @@
 
     android:previewImage="@drawable/widget_main"
 
-    android:resizeMode="horizontal"
+    android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen|keyguard"
-    tools:ignore="UnusedAttribute" />
+
+    tools:ignore="UnusedAttribute"
+    android:autoAdvanceViewId="@id/widget_id_stack"
+    />

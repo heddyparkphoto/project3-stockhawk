@@ -1,7 +1,11 @@
 package com.sam_chordas.android.stockhawk.touch_helper;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+
+import com.sam_chordas.android.stockhawk.service.StockTaskService;
 
 /**
  * Created by sam_chordas on 10/6/15.
@@ -55,5 +59,13 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback{
 
     ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
     itemViewHolder.onItemClear();
+
+     /*
+        Widget - Notify that an item was cleared so that the Widget is refreshed.
+        This call invokes the WidgetMainProvider.onReceive() which kicks off AppWidget dataChanged processes
+     */
+    Context context = recyclerView.getContext();
+    Intent intent = new Intent(StockTaskService.STOCK_WIDGET_DATA_UPDATED).setPackage(context.getPackageName());
+    context.sendBroadcast(intent);
   }
 }

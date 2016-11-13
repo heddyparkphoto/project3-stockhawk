@@ -19,6 +19,7 @@ import com.sam_chordas.android.stockhawk.data.QuoteProvider;
  * Created by hyeryungpark on 11/12/16.
  */
 public class WidgetMainService extends RemoteViewsService {
+
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
        /*
@@ -72,8 +73,7 @@ public class WidgetMainService extends RemoteViewsService {
                         data == null || !data.moveToPosition(position)) {
                     return null;
                 }
-                RemoteViews views = new RemoteViews(getPackageName(),
-                        R.layout.widget_stack_layout);
+                RemoteViews views = new RemoteViews(getPackageName(), R.layout.widget_stack_layout);
 
                 String symbolTxt = data.getString(data.getColumnIndex(QuoteColumns.SYMBOL));
                 String priceTxt = data.getString(data.getColumnIndex(QuoteColumns.BIDPRICE));
@@ -87,6 +87,11 @@ public class WidgetMainService extends RemoteViewsService {
                 views.setTextViewText(R.id.widget_bid_price, priceTxt);
                 views.setTextViewText(R.id.widget_change, changeTxt);
 
+                /*
+                    !!!!!! This click intent still not working.... it doesn't fire, plus one time it crashed.
+                    MORE WORK NEEDED, for now, I am satisfied!  Big day - yesterday and today having actually
+                    somewhat implemented the Widget collection
+                 */
                 final Intent fillInIntent = new Intent();
 
                 Uri detailUri = HistoricalProvider.Historical.historicalOfSymbol(symbolTxt);

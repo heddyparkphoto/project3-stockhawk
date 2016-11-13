@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -99,6 +100,14 @@ public abstract class CursorRecyclerViewAdapter <VH extends RecyclerView.ViewHol
     }
 
     return oldCursor;
+  }
+
+  @Override
+  public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+
+    Log.d(LOG_TAG, "debug!!");
+    super.onDetachedFromRecyclerView(recyclerView);
+
   }
 
   private class NotifyingDataSetObserver extends DataSetObserver{

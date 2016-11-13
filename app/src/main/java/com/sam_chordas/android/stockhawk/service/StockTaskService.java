@@ -2,6 +2,7 @@ package com.sam_chordas.android.stockhawk.service;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -38,6 +39,8 @@ import java.util.ArrayList;
  * and is used for the initialization and adding task as well.
  */
 public class StockTaskService extends GcmTaskService{
+  public static final String STOCK_WIDGET_DATA_UPDATED = "com.sam_chordas.android.stockhawk.STOCK_WIDGET_DATA_UPDATED";
+
   private String LOG_TAG = StockTaskService.class.getSimpleName();
 
   private OkHttpClient client = new OkHttpClient();
@@ -177,6 +180,12 @@ public class StockTaskService extends GcmTaskService{
         e.printStackTrace();
       }
     }
+
+    /*
+        Widget - Notify the WidgetMainProvider through WidgetMainService action
+     */
+    Intent intent = new Intent(STOCK_WIDGET_DATA_UPDATED).setPackage(mContext.getPackageName());
+    mContext.sendBroadcast(intent);
 
     return result;
   }

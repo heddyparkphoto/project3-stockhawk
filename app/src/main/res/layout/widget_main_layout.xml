@@ -5,12 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="@dimen/widget_margin"
+
     >
 
     <StackView
         android:id="@+id/widget_id_stack"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center"
+        android:loopViews="true"
         tools:listitem="@layout/widget_stack_layout"
         />
 

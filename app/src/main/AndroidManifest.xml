@@ -58,11 +58,12 @@
         <receiver
             android:name=".widget.WidgetMainProvider"
             android:label="@string/title_widget_stack_layout"
-            android:enabled="true"
+
             >
             <intent-filter>
                 <!--The 2 actions are only needed for older versions - copied them anyway-->
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.sam_chordas.android.stockhawk.STOCK_WIDGET_DATA_UPDATED" />
 
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
