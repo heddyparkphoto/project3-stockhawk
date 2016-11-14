@@ -1,6 +1,7 @@
 
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:fab="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,6 +11,7 @@
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+
         />
     <!-- empty list -->
     <TextView
@@ -39,5 +41,6 @@
         fab:fab_type="normal"
         fab:layout_anchor="recycler_view"
         fab:layout_anchorGravity="bottom | end"
+        android:contentDescription="@string/a11y_add_a_stock"
         />
 </FrameLayout>

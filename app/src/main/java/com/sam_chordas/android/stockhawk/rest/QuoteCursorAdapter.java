@@ -40,6 +40,9 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     View itemView = LayoutInflater.from(parent.getContext())
         .inflate(R.layout.list_item_quote, parent, false);
     ViewHolder vh = new ViewHolder(itemView);
+
+    itemView.setFocusable(true);  // A11y - Arrow-keys works to move up and down the list
+
     return vh;
   }
 

@@ -21,5 +21,7 @@
     <string name="stock_not_found">Stock name %s could not be found.</string>
     <string name="linechart_default">No chart data</string>
     <string name="title_widget_stack_layout">Stock Hawk</string>
+    <string name="a11y_add_a_stock">Add a stock</string>
+    <string name="a11y_widget_stock_symbol">stock symbol name</string>
 
 </resources>
