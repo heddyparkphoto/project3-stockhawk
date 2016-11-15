@@ -1,51 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/widget_stack_parent"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="72dp"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="@dimen/widget_margin"
-    android:background="#ffee00"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
     >
     <TextView
-        android:id="@+id/widget_stock_symbol"
-        style="@style/WidgetStockSymbolTextStyle"
+        android:id="@+id/stock_symbol"
+        style="@style/StockSymbolTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingRight="12dp"
-        android:gravity="left|center_vertical"
+        android:gravity="right|center_vertical"
         tools:text="GOOG"
-        android:contentDescription="@string/a11y_widget_stock_symbol"
+        android:contentDescription="@string/a11y_stock_symbol"
         />
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:gravity="right"
+        android:gravity="left"
         >
         <TextView
-            android:id="@+id/widget_bid_price"
-            style="@style/WidgetBidPriceTextStyle"
+            android:id="@+id/bid_price"
+            style="@style/BidPriceTextStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingRight="10dp"
-            android:paddingEnd="10dp"
+            android:paddingEnd="10sp"
             tools:text="1000.00"
+            android:contentDescription="@string/a11y_stock_price"
             />
         <TextView
-            android:id="@+id/widget_change"
+            android:id="@+id/change"
             android:background="@drawable/percent_change_pill"
-            style="@style/WidgetPercentChangeTextStyle"
+            style="@style/PercentChangeTextStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="3dp"
-            android:paddingRight="3dp"
-            tools:text="100%"
-
             android:paddingStart="3dp"
             android:paddingEnd="3dp"
-
+            tools:text="100%"
+            android:contentDescription="@string/a11y_stock_change"
             />
     </LinearLayout>
 </LinearLayout>

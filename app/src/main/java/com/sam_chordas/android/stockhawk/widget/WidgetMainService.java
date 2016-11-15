@@ -3,22 +3,24 @@ package com.sam_chordas.android.stockhawk.widget;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
+import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.sam_chordas.android.stockhawk.R;
-import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.ui.StockDetailActivity;
 
 /**
  * Created by hyeryungpark on 11/12/16.
  */
 public class WidgetMainService extends RemoteViewsService {
+
+    private static final String LOG_TAG = WidgetMainService.class.getSimpleName();
 
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
@@ -64,6 +66,8 @@ public class WidgetMainService extends RemoteViewsService {
 
             @Override
             public int getCount() {
+                int t=data==null?0:data.getCount();
+                Log.d(LOG_TAG, "Total rows in the data " + t);
                 return data==null?0:data.getCount();
             }
 
@@ -94,9 +98,7 @@ public class WidgetMainService extends RemoteViewsService {
                  */
                 final Intent fillInIntent = new Intent();
 
-                Uri detailUri = HistoricalProvider.Historical.historicalOfSymbol(symbolTxt);
-
-                fillInIntent.setData(detailUri);
+                fillInIntent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, symbolTxt);
                 views.setOnClickFillInIntent(R.id.widget_stack_parent, fillInIntent);
                 return views;
             }

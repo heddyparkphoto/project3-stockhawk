@@ -20,4 +20,14 @@
             <item name="android:textAllCaps">true</item>
         </style>
 
+        <!--Larger text sizes for curly languages in general-->
+        <style name="PercentChangeTextStyleLarge">
+            <item name="android:textSize">24sp</item>
+            <item name="android:textColor">#FFF</item>
+            <item name="android:textStyle">bold</item>
+        </style>
+        <style name="BidPriceTextStyleLarge">
+            <item name="android:textSize">24sp</item>
+        </style>
+
 </resources>

@@ -8,6 +8,7 @@
       android:orderInCategory="99"
       app:showAsAction="always"
       android:nextFocusRight="@+id/action_settings"
+      android:nextFocusForward="@+id/action_settings"
       />
   <item android:id="@+id/action_settings"
       android:title="@string/action_settings"

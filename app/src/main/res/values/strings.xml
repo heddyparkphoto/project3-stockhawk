@@ -23,5 +23,12 @@
     <string name="title_widget_stack_layout">Stock Hawk</string>
     <string name="a11y_add_a_stock">Add a stock</string>
     <string name="a11y_widget_stock_symbol">stock symbol name</string>
+    <string name="a11y_empty_stocks_list">Nothing to show in Stocks View</string>
+    <string name="a11y_stock_symbol">Stock symbol</string>
+    <string name="a11y_stock_price">Stock price</string>
+    <string name="a11y_stock_change">Stock price change percentage</string>
+    <string name="a11y_stock_widget">Stock Widget</string>
+    <string name="a11y_widget_stock_price_change">Widget Stock Price Change</string>
+    <string name="a11y_widget_stock_price">Widget Stock Price</string>
 
 </resources>
