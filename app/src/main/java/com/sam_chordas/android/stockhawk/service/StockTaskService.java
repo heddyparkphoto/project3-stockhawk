@@ -75,8 +75,20 @@ public class StockTaskService extends GcmTaskService{
     try{
       if (params.getTag().equals("historicalData")) {
         String of_symbol = params.getExtras().getString("symbol_h");
-        urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
-                + "symbol = \"" + of_symbol + "\" and startDate = \"2015-09-01\" and endDate = \"2016-09-01\"", "UTF-8"));
+
+          String[] spanDays = Utils.formatTimeSpanForApi(70);  // Our graph uses 35f data points, so try what looks best
+
+          urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
+                + "symbol = \"" + of_symbol + "\" and startDate = \"" + spanDays[0] + "\" and endDate = \"" + spanDays[1] + "\"", "UTF-8"));
+
+//          Log.d(LOG_TAG, "Checking query with dates: " + urlStringBuilder);
+
+//          StringBuilder test = new StringBuilder();
+//          test.append("https://query.yahooapis.com/v1/public/yql?q=");
+//          test.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
+//                + "symbol = \"" + of_symbol + "\" and startDate = \"2015-09-01\" and endDate = \"2016-09-01\"", "UTF-8"));
+//          Log.d(LOG_TAG, "TEST query : " + test);
+
       } else {
         urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
                 + "in (", "UTF-8"));
@@ -160,8 +172,9 @@ public class StockTaskService extends GcmTaskService{
 
             // Also trying to add invalid stock name from user input somehow....
             ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
-            if (checkDbOperation==null || checkDbOperation.isEmpty()){
-              Log.d(LOG_TAG, "INVALID STOCK NAME.");
+            if (params.getTag().equals("add") && (checkDbOperation==null || checkDbOperation.isEmpty())){
+              Log.d(LOG_TAG, "INVALID STOCK NAME. Response was: "+getResponse);
+
               setStockStatus(mContext, STOCK_INVALID_NAME);
               return result;
             }

@@ -4,10 +4,17 @@
         <style name="AppTheme" parent="Theme.AppCompat">
             <item name="colorPrimary">@color/material_blue_500</item>
             <item name="colorPrimaryDark">@color/material_blue_700</item>
-            <!-- Customize your theme here. -->
         </style>
 
-        <style name="PercentChangeTextStyle">
+    <!-- Used in AndroidManifest - Currently same as AppTheme -->
+    <style name="AppTheme.Main" parent="AppTheme">
+    </style>
+
+    <!-- Used in AndroidManifest - main window light color -->
+    <style name="AppTheme.Detail" parent="AppTheme">
+    </style>
+
+    <style name="PercentChangeTextStyle">
             <item name="android:textSize">20sp</item>
             <item name="android:textColor">#FFF</item>
             <item name="android:textStyle">bold</item>

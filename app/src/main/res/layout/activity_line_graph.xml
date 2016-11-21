@@ -10,7 +10,7 @@
 
     android:paddingStart="@dimen/activity_horizontal_margin"
     android:paddingEnd="@dimen/activity_horizontal_margin"
-    >
+    android:background="#eaeaea">
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/linechart"

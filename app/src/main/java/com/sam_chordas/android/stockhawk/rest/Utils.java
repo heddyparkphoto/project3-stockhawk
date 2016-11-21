@@ -19,7 +19,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * Created by sam_chordas on 10/8/15.
@@ -42,6 +45,9 @@ public class Utils {
         if (count == 1){
           jsonObject = jsonObject.getJSONObject("results")
               .getJSONObject("quote");
+          if (!validateStock(jsonObject)) {
+            return null;
+          }
           batchOperations.add(buildBatchOperation(jsonObject));
         } else{
           resultsArray = jsonObject.getJSONObject("results").getJSONArray("quote");
@@ -49,6 +55,10 @@ public class Utils {
           if (resultsArray != null && resultsArray.length() != 0){
             for (int i = 0; i < resultsArray.length(); i++){
               jsonObject = resultsArray.getJSONObject(i);
+              if (!validateStock(jsonObject)) {
+                Log.e(LOG_TAG, "Validation failed, Not added this stock: "+jsonObject.getString("symbol"));
+                continue;     // Not sure if not adding to the operations is a good way, so at least write the Error Log
+              }
               batchOperations.add(buildBatchOperation(jsonObject));
             }
           }
@@ -58,15 +68,26 @@ public class Utils {
       Log.e(LOG_TAG, "String to JSON failed: " + e);
       throw e;
     } catch (Exception e){
-      Log.e(LOG_TAG, "Something went wrong, could not apply batch ops.");
+      Log.e(LOG_TAG, "Something went wrong, could not apply batch ops. "+e);
     }
     return batchOperations;
   }
 
-  public static String truncateBidPrice(String bidPrice){
-    if (null==bidPrice || "null".equalsIgnoreCase(bidPrice)){
-      bidPrice = "0";
+  private static boolean validateStock(JSONObject jsonObject) {
+
+    try {
+      Float.parseFloat(jsonObject.getString("Bid"));
+      return true;
+    } catch (JSONException | NumberFormatException ex){
+      Log.e(LOG_TAG, "Validation failed! "+ex);
+      return false;
     }
+  }
+
+  public static String truncateBidPrice(String bidPrice){
+//    if (null==bidPrice || "null".equalsIgnoreCase(bidPrice)){
+//      bidPrice = "0";
+//    }
     bidPrice = String.format("%.2f", Float.parseFloat(bidPrice));
     return bidPrice;
   }
@@ -167,8 +188,8 @@ public class Utils {
       builder.withValue(HistoricalColumns.SYMBOL, jsonObject.getString("Symbol"));
       builder.withValue(HistoricalColumns.DATE_TEXT, jsonObject.getString("Date"));
       // HIGH LOW are REALs, using a convenience method to extract the json string to a float of two decimal point floats
-      builder.withValue(HistoricalColumns.HIGH, roundPrice(jsonObject.getString("High")));
-      builder.withValue(HistoricalColumns.LOW, roundPrice(jsonObject.getString("Low")));
+      builder.withValue(HistoricalColumns.HIGH, Float.parseFloat(jsonObject.getString("High")));
+      builder.withValue(HistoricalColumns.LOW, Float.parseFloat(jsonObject.getString("Low")));
 
     } catch (JSONException e){
       e.printStackTrace();
@@ -177,15 +198,40 @@ public class Utils {
     return builder.build();
   }
 
-  private static float roundPrice(String price) {
+    /*
+        This method to return start and end dates in a format specifically used for the yql.
 
-    float returnVal;
-    if (null==price || price.length()==0){
-      return 0f;
-    } else {
-      String temp = truncateBidPrice(price);
-      returnVal = Float.parseFloat(temp);
-      return returnVal;
+        params:
+        int daysToSubtract:  number of days to be subtracted from yesterday's date
+
+        returns:
+        String [0] is always a startDate, [1] is always an endDate.
+     */
+    public static String[] formatTimeSpanForApi(int daysToSubtract){
+        String[] returnVal = new String[2];
+        final String API_DATE_FORMAT = "YYYY-MM-dd";  // "YYYY-MM-DD" gave how many days into 366 days, 11/20/2016 was 325.
+        int actualDaysToSubtract = daysToSubtract-1; // less one than passed in to include the end/start dates.
+
+        /* Set dateFormat we need to use the yql api */
+        java.text.SimpleDateFormat apiDateFormat = new SimpleDateFormat(API_DATE_FORMAT, Locale.US);
+
+        /* Calculate historyDate */
+        Calendar historyDate = Calendar.getInstance();  // Get todate
+        historyDate.add(Calendar.DATE, -1); // set historyDate to be yesterday's date to get the Stock price at market close yesterday
+
+        /* Transform to a String that the api expects */
+        String endDateFormatted = apiDateFormat.format(historyDate.getTime());
+        Log.d(LOG_TAG, "StockHawk endDate: "+endDateFormatted);
+
+        historyDate.add(Calendar.DATE, (-actualDaysToSubtract));   // use one less as said above.
+
+        String startDateFormatted = apiDateFormat.format(historyDate.getTime());
+        Log.d(LOG_TAG, "StockHawk startDate: "+startDateFormatted);
+
+        // populate the returnVal array in the right order
+        returnVal[0] = startDateFormatted;
+        returnVal[1] = endDateFormatted;
+
+        return returnVal;
     }
-  }
 }

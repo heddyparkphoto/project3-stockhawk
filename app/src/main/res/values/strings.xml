@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
     <string name="app_name">Stock Hawk</string>
 
     <string name="action_example">Example action</string>
@@ -25,8 +25,9 @@
     <string name="a11y_widget_stock_symbol">stock symbol name</string>
     <string name="a11y_empty_stocks_list">Nothing to show in Stocks View</string>
     <string name="a11y_stock_symbol">Stock symbol</string>
-    <string name="a11y_stock_price">Stock price</string>
-    <string name="a11y_stock_change">Stock price change percentage</string>
+    <string name="a11y_stock_price">Stock price <xliff:g id="bid_price">%1$s %2$s</xliff:g></string>
+    <string name="a11y_stock_change_pct">Change percentage <xliff:g id="pct">%1$s</xliff:g></string>
+    <string name="a11y_stock_change_price">Change price <xliff:g id="chg_pr">%1$s</xliff:g></string>
     <string name="a11y_stock_widget">Stock Widget</string>
     <string name="a11y_widget_stock_price_change">Widget Stock Price Change</string>
     <string name="a11y_widget_stock_price">Widget Stock Price</string>
