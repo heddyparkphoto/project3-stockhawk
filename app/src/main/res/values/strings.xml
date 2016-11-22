@@ -31,5 +31,6 @@
     <string name="a11y_stock_widget">Stock Widget</string>
     <string name="a11y_widget_stock_price_change">Widget Stock Price Change</string>
     <string name="a11y_widget_stock_price">Widget Stock Price</string>
+    <string name="a11y_graph_name">Price over past 30 days</string>
 
 </resources>

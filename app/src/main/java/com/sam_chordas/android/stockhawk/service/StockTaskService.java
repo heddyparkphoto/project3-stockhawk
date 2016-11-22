@@ -20,6 +20,7 @@ import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
+import com.sam_chordas.android.stockhawk.ui.StockDetailActivity;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -76,7 +77,7 @@ public class StockTaskService extends GcmTaskService{
       if (params.getTag().equals("historicalData")) {
         String of_symbol = params.getExtras().getString("symbol_h");
 
-          String[] spanDays = Utils.formatTimeSpanForApi(70);  // Our graph uses 35f data points, so try what looks best
+          String[] spanDays = Utils.formatTimeSpanForApi(StockDetailActivity.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
 
           urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
                 + "symbol = \"" + of_symbol + "\" and startDate = \"" + spanDays[0] + "\" and endDate = \"" + spanDays[1] + "\"", "UTF-8"));

@@ -10,12 +10,16 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.HistoricalColumns;
@@ -33,26 +37,37 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
     private static final String LOG_TAG = StockDetailActivity.class.getSimpleName();
     public final static String LABEL = "Chart for stock";
     public static final String OF_STOCK_SYMBOL = "OF_STOCK";
+    public static final int SPAN_DAYS = 14;
+
     private Intent mServiceIntent;
     private final static int HISTORICAL_CURSOR_LOADER = 4;
     private String mOfSymbol;
     private LineChart mLineChart;
+    private TextView mStockTitle;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_line_graph);
 
+        mStockTitle = (TextView) findViewById(R.id.graphTitle);
+
         Intent intent = getIntent();
         if (intent!=null){
             if (intent.hasExtra(OF_STOCK_SYMBOL)) {
                 mOfSymbol = intent.getStringExtra(OF_STOCK_SYMBOL);
 
+                // Set title for this instance
+                if (mStockTitle!=null){
+                    String caps= mOfSymbol.toUpperCase();
+                    mStockTitle.setText(caps);
+                }
+
                 // Make sure the history of the stock doesn't already exist in the DB
                 // NOTE: Later, in Phase 2, I should implement to refresh data if data is old.  For now, I am content.
                 Cursor cursor = getContentResolver().query(HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
                         null, HistoricalColumns.SYMBOL + "= ?",
-                        new String[] {mOfSymbol}, null);
+                        new String[] {mOfSymbol}, HistoricalColumns.DATE_TEXT);
                 if (cursor.getCount() != 0) {
                     drawLineChart(cursor);
                 }
@@ -114,15 +129,24 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
             date = cursor.getString(cursor.getColumnIndex(HistoricalColumns.DATE_TEXT));
             high = cursor.getFloat(cursor.getColumnIndex(HistoricalColumns.HIGH));
             entries.add(new Entry(x, high));
-            x = x + 0.1f;
-            dates.add(date);
+            x = x + 1.0f;   // My own set up: each plot point seems to set by each day, not smaller.
+            String unitD = shortenDate(date);  // Display mm/dd as X-axis unit
+            dates.add(unitD);
+        }
+
+        // Used the new feature in the MPAndroidChart:v3.0.1 to label the X-axis with shortened dates
+        IndexAxisValueFormatter displayDateOnX = new IndexAxisValueFormatter();
+
+        if (!dates.isEmpty()) {
+            String[] datesArray = new String[dates.size()];
+            displayDateOnX.setValues(dates.toArray(datesArray));
         }
 
         // Ready to set up UI for multiple datasets, ILineDataSet.  It works also for single LineDataSet that we have.
         ArrayList<ILineDataSet> lineDataSets = new ArrayList<>();
 
         //embellish for UI
-        LineDataSet lineDataSet1 = new LineDataSet(entries, mOfSymbol);
+        LineDataSet lineDataSet1 = new LineDataSet(entries, mOfSymbol); //mOfSymbol and the graph color are paired and shown in the UI
         lineDataSet1.setDrawCircles(false);
         lineDataSet1.setColor(Color.MAGENTA);
 
@@ -134,9 +158,32 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
             mLineChart = (LineChart) findViewById(R.id.linechart);
         }
 
+        Description desc = new Description();
+        desc.setText(this.getString(R.string.a11y_graph_name));
+        mLineChart.setDescription(desc);
+
+        XAxis xaxis = mLineChart.getXAxis();
+        xaxis.setValueFormatter(displayDateOnX);
+
         //setData to the LineChart by constructing the LineData (xStringArray, LineDataSets)
         mLineChart.setData(new LineData(lineDataSets));
-        mLineChart.setVisibleXRangeMaximum(35f);    // experiment on the phone to get good curve
+        //mLineChart.setVisibleXRangeMaximum(35f);    //Commenting out during phase 2: did not work well with shorter ranges - experiment on the phone to get good curve
+    }
+
+    /*
+        Convenience method to shorten date as unit on X-Axis
+        From: "2525-11-10" to "11/10".... We'll explain it is up to yesterday's market close rolling days.
+     */
+    private String shortenDate(String date) {
+        String localD = date;
+
+        if (date==null || date.length() < 6){
+            return localD;
+        }
+
+        // Remove the year, and use '/' between the month and date
+        localD = (localD.substring(5)).replace("-", "/");
+        return localD;
     }
 
     @Override
@@ -144,7 +191,7 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
 
         return new CursorLoader(this, HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
                 null, HistoricalColumns.SYMBOL + "= ?",
-                new String[] {mOfSymbol}, HistoricalColumns.DATE_TEXT+" ASC");
+                new String[] {mOfSymbol}, HistoricalColumns.DATE_TEXT);
     }
 
     @Override
@@ -182,6 +229,4 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
         // to ensure, but it is better than crashing.
         getLoaderManager().restartLoader(HISTORICAL_CURSOR_LOADER, null, this);
     }
-
-
 }

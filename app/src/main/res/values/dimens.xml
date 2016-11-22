@@ -14,4 +14,7 @@
     <dimen name="widget_main_min_resize_height">120dp</dimen>
     <dimen name="widget_main_min_resize_width">220dp</dimen>
 
+    <!--StockDetailActivity layout-->
+    <dimen name="activity_detail_graph_height">500dp</dimen>
+
 </resources>
