@@ -2,6 +2,7 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.view.View;
  * Created by sam_chordas on 11/9/15.
  */
 public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchListener {
+    private static final String LOG_TAG = RecyclerViewItemClickListener.class.getSimpleName();
 
   @Override public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
 
@@ -32,6 +34,7 @@ public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchLi
   }
 
   @Override public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent e) {
+      Log.d(LOG_TAG, "onInterceptTouchEvent");
     View childView = view.findChildViewUnder(e.getX(), e.getY());
     if (childView != null && listener != null && gestureDetector.onTouchEvent(e)) {
       listener.onItemClick(childView, view.getChildPosition(childView));
@@ -40,5 +43,7 @@ public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchLi
     return false;
   }
 
-  @Override public void onTouchEvent(RecyclerView view, MotionEvent motionEvent) { }
+  @Override public void onTouchEvent(RecyclerView view, MotionEvent motionEvent) {
+      Log.d(LOG_TAG, "onTouchEvent");
+  }
 }

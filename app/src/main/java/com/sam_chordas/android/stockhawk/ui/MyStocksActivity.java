@@ -36,6 +36,7 @@ import com.sam_chordas.android.stockhawk.rest.RecyclerViewItemClickListener;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
+import com.sam_chordas.android.stockhawk.service.TaskTagKind;
 import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 
 import java.util.Locale;
@@ -74,7 +75,7 @@ public class MyStocksActivity extends AppCompatActivity
         mServiceIntent = new Intent(this, StockIntentService.class);
         if (savedInstanceState == null){
             // Run the initialize task service so that some stocks appear upon an empty database
-            mServiceIntent.putExtra("tag", "init");
+            mServiceIntent.putExtra("tag", TaskTagKind.INIT);
             if (isConnected){
                 startService(mServiceIntent);
             } else{
@@ -109,6 +110,7 @@ public class MyStocksActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 mNewStockName = null;
+                isConnected = Utils.isConnected(MyStocksActivity.this);
                 if (isConnected){
                     new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
                             .content(R.string.content_test)
@@ -117,9 +119,14 @@ public class MyStocksActivity extends AppCompatActivity
                                 @Override public void onInput(MaterialDialog dialog, CharSequence input) {
                                     // On FAB click, receive user input. Make sure the stock doesn't already exist
                                     // in the DB and proceed accordingly
+                                    String inputToUpper=null;
+                                    if (input!=null){
+                                        inputToUpper = input.toString().toUpperCase();
+                                    }
                                     Cursor c = getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
                                             new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
-                                            new String[] { input.toString() }, null);
+                                            //new String[] { input.toString() }, null);
+                                            new String[] { inputToUpper }, null);
                                     if (c.getCount() != 0) {
                                         Toast toast =
                                                 Toast.makeText(MyStocksActivity.this, "This stock is already saved!",
@@ -130,7 +137,7 @@ public class MyStocksActivity extends AppCompatActivity
                                     } else {
                                         Log.d(LOG_TAG, "Add new stock!");
                                         // Add the stock to DB
-                                        mServiceIntent.putExtra("tag", "add");
+                                        mServiceIntent.putExtra("tag", TaskTagKind.ADD);
                                         mServiceIntent.putExtra("symbol", input.toString());
                                         mNewStockName = input.toString();
                                         startService(mServiceIntent);
@@ -153,7 +160,6 @@ public class MyStocksActivity extends AppCompatActivity
         if (isConnected){
             long period = 3600L;
             long flex = 10L;
-            String periodicTag = "periodic";
 
             // create a periodic task to pull stocks once every hour after the app has been opened. This
             // is so Widget data stays up to date.
@@ -161,7 +167,7 @@ public class MyStocksActivity extends AppCompatActivity
                     .setService(StockTaskService.class)
                     .setPeriod(period)
                     .setFlex(flex)
-                    .setTag(periodicTag)
+                    .setTag(TaskTagKind.PERIODIC)
                     .setRequiredNetwork(Task.NETWORK_STATE_CONNECTED)
                     .setRequiresCharging(false)
                     .build();
@@ -182,7 +188,7 @@ public class MyStocksActivity extends AppCompatActivity
     }
 
     public void networkToast(){
-        Toast.makeText(mContext, getString(R.string.network_toast), Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, getString(R.string.empty_network_not_connected), Toast.LENGTH_SHORT).show();
     }
 
     public void restoreActionBar() {
@@ -258,25 +264,24 @@ public class MyStocksActivity extends AppCompatActivity
                 message = getString(R.string.empty_network_not_connected);
                 break;
             case StockTaskService.STOCK_INVALID_NAME:
-                message = getString(R.string.stock_not_found);
+                // Include the stock name in the error message; mNewStockName set during "add" on the FloatingActionButton
+                message = String.format(Locale.US, getString(R.string.stock_not_found), mNewStockName);
                 break;
             case StockTaskService.STOCK_STATUS_UNKNOWN:
             default:
                 message = getString(R.string.empty_status_unknown);
                 break;
-
         }
 
-        if (mCursorAdapter.getItemCount()==0){
+        if (mCursorAdapter.getItemCount()==0) {
             TextView emptyview = (TextView) findViewById(R.id.recycler_view_stocks_empty);
-            if (emptyview!=null){
+            if (emptyview != null) {
                 emptyview.setText(message);
             }
-        } else if (mNewStockName!=null && !mNewStockName.isEmpty()){
-            if (status==StockTaskService.STOCK_INVALID_NAME){
-                message = String.format(Locale.US, getString(R.string.stock_not_found), mNewStockName);
-                Toast.makeText(mContext, message, Toast.LENGTH_LONG).show();
-            }
+        } else if (status==StockTaskService.STOCK_INVALID_NAME){
+            Toast toast = Toast.makeText(mContext, message, Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+            toast.show();
         }
     }
 

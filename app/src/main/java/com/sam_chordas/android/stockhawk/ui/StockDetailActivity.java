@@ -26,6 +26,7 @@ import com.sam_chordas.android.stockhawk.data.HistoricalColumns;
 import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
+import com.sam_chordas.android.stockhawk.service.TaskTagKind;
 
 import java.util.ArrayList;
 
@@ -84,7 +85,7 @@ public class StockDetailActivity extends AppCompatActivity implements LoaderMana
                     /*  The tag and the key/value that I refactor-ed the existing methods
                         to process the new yql queries to get what we want: historical data
                     */
-                    mServiceIntent.putExtra("tag", "historicalData");
+                    mServiceIntent.putExtra("tag", TaskTagKind.HISTORIC);
                     mServiceIntent.putExtra("symbol_h", mOfSymbol);
                     startService(mServiceIntent);
                } else {

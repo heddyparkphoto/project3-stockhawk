@@ -74,7 +74,7 @@ public class StockTaskService extends GcmTaskService{
     urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
 
     try{
-      if (params.getTag().equals("historicalData")) {
+      if (params.getTag().equals(TaskTagKind.HISTORIC)) {
         String of_symbol = params.getExtras().getString("symbol_h");
 
           String[] spanDays = Utils.formatTimeSpanForApi(StockDetailActivity.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
@@ -98,7 +98,7 @@ public class StockTaskService extends GcmTaskService{
       setStockStatus(mContext, STOCK_INVALID_NAME);
       e.printStackTrace();
     }
-    if (params.getTag().equals("init") || params.getTag().equals("periodic")){
+    if (params.getTag().equals(TaskTagKind.INIT) || params.getTag().equals(TaskTagKind.PERIODIC)){
       isUpdate = true;
       initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
           new String[] { "Distinct " + QuoteColumns.SYMBOL }, null,
@@ -128,7 +128,7 @@ public class StockTaskService extends GcmTaskService{
           e.printStackTrace();
         }
       }
-    } else if (params.getTag().equals("add")){
+    } else if (params.getTag().equals(TaskTagKind.ADD)){
       isUpdate = false;
       // get symbol from params.getExtra and build query
       String stockInput = params.getExtras().getString("symbol");
@@ -138,7 +138,7 @@ public class StockTaskService extends GcmTaskService{
         setStockStatus(mContext, STOCK_INVALID_NAME);
         e.printStackTrace();
       }
-    } else if (params.getTag().equals("historicalData")) {
+    } else if (params.getTag().equals(TaskTagKind.HISTORIC)) {
       // Nothing more than having appended a paths to the UrlStringBuilder above.
     }
     // finalize the URL for the API query.
@@ -164,7 +164,7 @@ public class StockTaskService extends GcmTaskService{
                 null, null);
           }
 
-          if (params.getTag().equals("historicalData")){
+          if (params.getTag().equals(TaskTagKind.HISTORIC)){
             // Historical DB insert
             mContext.getContentResolver().applyBatch(HistoricalProvider.AUTHORITY,
                     Utils.historicalJsonContentVals(getResponse));
@@ -173,7 +173,7 @@ public class StockTaskService extends GcmTaskService{
 
             // Also trying to add invalid stock name from user input somehow....
             ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
-            if (params.getTag().equals("add") && (checkDbOperation==null || checkDbOperation.isEmpty())){
+            if (params.getTag().equals(TaskTagKind.ADD) && (checkDbOperation==null || checkDbOperation.isEmpty())){
               Log.d(LOG_TAG, "INVALID STOCK NAME. Response was: "+getResponse);
 
               setStockStatus(mContext, STOCK_INVALID_NAME);
@@ -217,7 +217,7 @@ public class StockTaskService extends GcmTaskService{
   public static final int STOCK_INVALID_SERVER=3;
   public static final int STOCK_STATUS_UNKNOWN=4;
 
-  private static void setStockStatus(Context context, @StockStatusDefinitions int status){
+  public static void setStockStatus(Context context, @StockStatusDefinitions int status){
     SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
     SharedPreferences.Editor editor = shp.edit();
     editor.putInt(context.getString(R.string.pref_stock_status), status).commit();

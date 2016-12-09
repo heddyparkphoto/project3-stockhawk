@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.service.StockTaskService;
 import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperAdapter;
 import com.sam_chordas.android.stockhawk.touch_helper.ItemTouchHelperViewHolder;
 
@@ -93,7 +94,11 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     c.moveToPosition(position);
     String symbol = c.getString(c.getColumnIndex(QuoteColumns.SYMBOL));
     mContext.getContentResolver().delete(QuoteProvider.Quotes.withSymbol(symbol), null, null);
+
+    /* Invoke RecyclerView's method  */
     notifyItemRemoved(position);
+    /* Reset status to OK, otherwise previous error message popped up before displaying existing stocks in MyStockActivity */
+    StockTaskService.setStockStatus(mContext, StockTaskService.STOCK_STATUS_OK);
   }
 
   @Override public int getItemCount() {
