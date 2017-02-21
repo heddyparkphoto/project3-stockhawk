@@ -17,9 +17,8 @@ import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 
 public class MyStocksActivity extends AppCompatActivity
-            implements MyStocksFragment.MyStocksClickListener
-{
-//        implements LoaderManager.LoaderCallbacks<Cursor>,
+        implements MyStocksFragment.MyStocksClickListener {
+    //        implements LoaderManager.LoaderCallbacks<Cursor>,
 //        SharedPreferences.OnSharedPreferenceChangeListener {
     static final String LOG_TAG = MyStocksActivity.class.getSimpleName();
     private static final String MASTERFRAGMENT_TAG = "MFRAG";
@@ -40,6 +39,7 @@ public class MyStocksActivity extends AppCompatActivity
     private Cursor mCursor;
     boolean isConnected;
     private static String mNewStockName;
+    public static String REMOVED_FLAG = "REMOVED";
 
     // VAR used to MyStocksFragment CursorLoader refresh
     String mPosition;
@@ -55,17 +55,21 @@ public class MyStocksActivity extends AppCompatActivity
         isConnected = Utils.isConnected(this);
         setContentView(R.layout.activity_my_stocks);
 
+        String stockSymbolOnIntent = getIntent()!=null?getIntent().getStringExtra(StockDetailActivity.OF_STOCK_SYMBOL):null;
+
         if (findViewById(R.id.line_graph_container) != null) {
             mTwoPane = true;
 
             if (savedInstanceState == null) {
-//
-//                getSupportFragmentManager().beginTransaction()
-//                        .add(R.id.fragment_my_stocks, new MyStocksFragment(), MASTERFRAGMENT_TAG)
-//                        .commit();
-//
+                StockDetailFragment df = new StockDetailFragment();
+                if (stockSymbolOnIntent!=null) {
+                    Bundle args = new Bundle();
+                    args.putString(StockDetailFragment.DETAIL_ARGUMENT, stockSymbolOnIntent);
+                    df.setArguments(args);
+                }
+
                 getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.line_graph_container, new StockDetailFragment(), DETAILFRAGMENT_TAG)
+                        .replace(R.id.line_graph_container, df, DETAILFRAGMENT_TAG)
                         .commit();
             }
         } else {
@@ -185,7 +189,7 @@ public class MyStocksActivity extends AppCompatActivity
 
     @Override
     public void OnStockItemClick(String stockSymbol) {
-        if (mTwoPane){
+        if (mTwoPane) {
             //we are in two - pane, update for the picked stock symbol
             //invoke a new instance of the DetailFragment
             //DetailFragment newdf = DetailFragment.newInstance(weatherItemUri);
@@ -193,6 +197,10 @@ public class MyStocksActivity extends AppCompatActivity
 
             //  df = DetailFragment.newInstance(weatherItemUri);
             StockDetailFragment df = new StockDetailFragment();
+
+            if (stockSymbol.compareTo(REMOVED_FLAG)==0){
+                df.dataChanged();
+            }
             Bundle args = new Bundle();
             args.putString(StockDetailFragment.DETAIL_ARGUMENT, stockSymbol);
             df.setArguments(args);
@@ -206,9 +214,13 @@ public class MyStocksActivity extends AppCompatActivity
             transaction.commit();
 
         } else {
-            Intent intent = new Intent(this,StockDetailActivity.class);
-            intent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, stockSymbol);
-            startActivity(intent);
+            if (stockSymbol.compareTo(REMOVED_FLAG)==0) {
+                // Nothing to do because the StockDetail is not displayed in the One-pane mode
+            } else {
+                Intent intent = new Intent(this, StockDetailActivity.class);
+                intent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, stockSymbol);
+                startActivity(intent);
+            }
         }
     }
 
@@ -255,7 +267,7 @@ public class MyStocksActivity extends AppCompatActivity
             return true;
         }
 
-        if (id == R.id.action_change_units){
+        if (id == R.id.action_change_units) {
             // this is for changing stock changes from percent value to dollar value
             Utils.showPercent = !Utils.showPercent;
             this.getContentResolver().notifyChange(QuoteProvider.Quotes.CONTENT_URI, null);

@@ -8,13 +8,16 @@
     <dimen name="navigation_drawer_width">240dp</dimen>
 
     <!--Collection Widget-->
-    <dimen name="widget_main_default_height">80dp</dimen>
-    <dimen name="widget_main_default_width">160dp</dimen>
+    <dimen name="widget_main_default_height">120dp</dimen>
+    <dimen name="widget_main_default_width">220dp</dimen>
 
-    <dimen name="widget_main_min_resize_height">120dp</dimen>
-    <dimen name="widget_main_min_resize_width">220dp</dimen>
+    <dimen name="widget_main_min_resize_height">80dp</dimen>
+    <dimen name="widget_main_min_resize_width">160dp</dimen>
 
     <!--StockDetailActivity layout-->
     <dimen name="activity_detail_graph_height">500dp</dimen>
+    <dimen name="widget_title_height">4dp</dimen>
+    <dimen name="padding_min">10dp</dimen>
+    <dimen name="widget_left_padding">12dp</dimen>
 
 </resources>

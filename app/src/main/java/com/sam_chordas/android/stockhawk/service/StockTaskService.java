@@ -20,6 +20,7 @@ import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
 import com.sam_chordas.android.stockhawk.rest.Utils;
+import com.sam_chordas.android.stockhawk.ui.MyStocksFragment;
 import com.sam_chordas.android.stockhawk.ui.StockDetailFragment;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -39,48 +40,50 @@ import java.util.ArrayList;
  * The GCMTask service is primarily for periodic tasks. However, OnRunTask can be called directly
  * and is used for the initialization and adding task as well.
  */
-public class StockTaskService extends GcmTaskService{
-  public static final String STOCK_WIDGET_DATA_UPDATED = "com.sam_chordas.android.stockhawk.STOCK_WIDGET_DATA_UPDATED";
+public class StockTaskService extends GcmTaskService {
+    public static final String STOCK_WIDGET_DATA_UPDATED = "com.sam_chordas.android.stockhawk.STOCK_WIDGET_DATA_UPDATED";
 
-  private String LOG_TAG = StockTaskService.class.getSimpleName();
+    private String LOG_TAG = StockTaskService.class.getSimpleName();
 
-  private OkHttpClient client = new OkHttpClient();
-  private Context mContext;
-  private StringBuilder mStoredSymbols = new StringBuilder();
-  private boolean isUpdate;
+    private OkHttpClient client = new OkHttpClient();
+    private Context mContext;
+    private StringBuilder mStoredSymbols = new StringBuilder();
+    private boolean isUpdate;
 
-  public StockTaskService(){}
-
-  public StockTaskService(Context context){
-    mContext = context;
-  }
-  String fetchData(String url) throws IOException{
-    Request request = new Request.Builder()
-        .url(url)
-        .build();
-
-    Response response = client.newCall(request).execute();
-    return response.body().string();
-  }
-
-  @Override
-  public int onRunTask(TaskParams params){
-    Cursor initQueryCursor;
-    if (mContext == null){
-      mContext = this;
+    public StockTaskService() {
     }
-    StringBuilder urlStringBuilder = new StringBuilder();
-    // Base URL for the Yahoo query
-    urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
 
-    try{
-      if (params.getTag().equals(TaskTagKind.HISTORIC)) {
-        String of_symbol = params.getExtras().getString("symbol_h");
+    public StockTaskService(Context context) {
+        mContext = context;
+    }
 
-          String[] spanDays = Utils.formatTimeSpanForApi(StockDetailFragment.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
+    String fetchData(String url) throws IOException {
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
 
-          urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
-                + "symbol = \"" + of_symbol + "\" and startDate = \"" + spanDays[0] + "\" and endDate = \"" + spanDays[1] + "\"", "UTF-8"));
+        Response response = client.newCall(request).execute();
+        return response.body().string();
+    }
+
+    @Override
+    public int onRunTask(TaskParams params) {
+        Cursor initQueryCursor;
+        if (mContext == null) {
+            mContext = this;
+        }
+        StringBuilder urlStringBuilder = new StringBuilder();
+        // Base URL for the Yahoo query
+        urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
+
+        try {
+            if (params.getTag().equals(TaskTagKind.HISTORIC)) {
+                String of_symbol = params.getExtras().getString("symbol_h");
+
+                String[] spanDays = Utils.formatTimeSpanForApi(StockDetailFragment.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
+
+                urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
+                        + "symbol = \"" + of_symbol + "\" and startDate = \"" + spanDays[0] + "\" and endDate = \"" + spanDays[1] + "\"", "UTF-8"));
 
 //          Log.d(LOG_TAG, "Checking query with dates: " + urlStringBuilder);
 
@@ -90,137 +93,137 @@ public class StockTaskService extends GcmTaskService{
 //                + "symbol = \"" + of_symbol + "\" and startDate = \"2015-09-01\" and endDate = \"2016-09-01\"", "UTF-8"));
 //          Log.d(LOG_TAG, "TEST query : " + test);
 
-      } else {
-        urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
-                + "in (", "UTF-8"));
-      }
-    } catch (UnsupportedEncodingException e) {
-      setStockStatus(mContext, STOCK_INVALID_NAME);
-      e.printStackTrace();
-    }
-    if (params.getTag().equals(TaskTagKind.INIT) || params.getTag().equals(TaskTagKind.PERIODIC)){
-      isUpdate = true;
-      initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-          new String[] { "Distinct " + QuoteColumns.SYMBOL }, null,
-          null, null);
-      if (initQueryCursor.getCount() == 0 || initQueryCursor == null){
-        // Init task. Populates DB with quotes for the symbols seen below
-        try {
-          urlStringBuilder.append(
-              URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-          setStockStatus(mContext, STOCK_INVALID_NAME);
-          e.printStackTrace();
-        }
-      } else if (initQueryCursor != null){
-        DatabaseUtils.dumpCursor(initQueryCursor);
-        initQueryCursor.moveToFirst();
-        for (int i = 0; i < initQueryCursor.getCount(); i++){
-          mStoredSymbols.append("\""+
-              initQueryCursor.getString(initQueryCursor.getColumnIndex("symbol"))+"\",");
-          initQueryCursor.moveToNext();
-        }
-        mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
-        try {
-          urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-          setStockStatus(mContext, STOCK_INVALID_NAME);
-          e.printStackTrace();
-        }
-      }
-    } else if (params.getTag().equals(TaskTagKind.ADD)){
-      isUpdate = false;
-      // get symbol from params.getExtra and build query
-      String stockInput = params.getExtras().getString("symbol");
-      try {
-        urlStringBuilder.append(URLEncoder.encode("\""+stockInput+"\")", "UTF-8"));
-      } catch (UnsupportedEncodingException e){
-        setStockStatus(mContext, STOCK_INVALID_NAME);
-        e.printStackTrace();
-      }
-    } else if (params.getTag().equals(TaskTagKind.HISTORIC)) {
-      // Nothing more than having appended a paths to the UrlStringBuilder above.
-    }
-    // finalize the URL for the API query.
-    urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-        + "org%2Falltableswithkeys&callback=");
-
-    String urlString;
-    String getResponse;
-    int result = GcmNetworkManager.RESULT_FAILURE;
-
-    if (urlStringBuilder != null){
-      urlString = urlStringBuilder.toString();
-      try{
-        getResponse = fetchData(urlString);
-        result = GcmNetworkManager.RESULT_SUCCESS;
-        setStockStatus(mContext, STOCK_STATUS_OK);
-        try {
-          ContentValues contentValues = new ContentValues();
-          // update ISCURRENT to 0 (false) so new data is current
-          if (isUpdate){
-            contentValues.put(QuoteColumns.ISCURRENT, 0);
-            mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
-                null, null);
-          }
-
-          if (params.getTag().equals(TaskTagKind.HISTORIC)){
-            // Historical DB insert
-            mContext.getContentResolver().applyBatch(HistoricalProvider.AUTHORITY,
-                    Utils.historicalJsonContentVals(getResponse));
-          } else {
-            // This insert already existed for the Main screen and Quote DB
-
-            // Also trying to add invalid stock name from user input somehow....
-            ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
-            if (params.getTag().equals(TaskTagKind.ADD) && (checkDbOperation==null || checkDbOperation.isEmpty())){
-              Log.d(LOG_TAG, "INVALID STOCK NAME. Response was: "+getResponse);
-
-              setStockStatus(mContext, STOCK_INVALID_NAME);
-              return result;
+            } else {
+                urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
+                        + "in (", "UTF-8"));
             }
-
-            mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
-                    checkDbOperation);
-          }
-        }catch (RemoteException | OperationApplicationException e){
-          Log.e(LOG_TAG, "Error applying batch insert", e);
-        }catch (JSONException e){
-          Log.e(LOG_TAG, "Error Response returned threw JSONException", e);
-          return -99;
+        } catch (UnsupportedEncodingException e) {
+            setStockStatus(mContext, STOCK_INVALID_NAME);
+            e.printStackTrace();
         }
-      } catch (IOException e){
-        setStockStatus(mContext, STOCK_INVALID_SERVER);
-        e.printStackTrace();
-      }
-    }
+        if (params.getTag().equals(TaskTagKind.INIT) || params.getTag().equals(TaskTagKind.PERIODIC)) {
+            isUpdate = true;
+            initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
+                    new String[]{"Distinct " + QuoteColumns.SYMBOL}, null,
+                    null, null);
+            if (initQueryCursor.getCount() == 0 || initQueryCursor == null) {
+                // Init task. Populates DB with quotes for the symbols seen below
+                try {
+                    urlStringBuilder.append(
+                            URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    setStockStatus(mContext, STOCK_INVALID_NAME);
+                    e.printStackTrace();
+                }
+            } else if (initQueryCursor != null) {
+                DatabaseUtils.dumpCursor(initQueryCursor);
+                initQueryCursor.moveToFirst();
+                for (int i = 0; i < initQueryCursor.getCount(); i++) {
+                    mStoredSymbols.append("\"" +
+                            initQueryCursor.getString(initQueryCursor.getColumnIndex("symbol")) + "\",");
+                    initQueryCursor.moveToNext();
+                }
+                mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
+                try {
+                    urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    setStockStatus(mContext, STOCK_INVALID_NAME);
+                    e.printStackTrace();
+                }
+            }
+        } else if (params.getTag().equals(TaskTagKind.ADD)) {
+            isUpdate = false;
+            // get symbol from params.getExtra and build query
+            String stockInput = params.getExtras().getString("symbol");
+            try {
+                urlStringBuilder.append(URLEncoder.encode("\"" + stockInput + "\")", "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                setStockStatus(mContext, STOCK_INVALID_NAME);
+                e.printStackTrace();
+            }
+        } else if (params.getTag().equals(TaskTagKind.HISTORIC)) {
+            // Nothing more than having appended a paths to the UrlStringBuilder above.
+        }
+        // finalize the URL for the API query.
+        urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
+                + "org%2Falltableswithkeys&callback=");
+
+        String urlString;
+        String getResponse;
+        int result = GcmNetworkManager.RESULT_FAILURE;
+
+        if (urlStringBuilder != null) {
+            urlString = urlStringBuilder.toString();
+            try {
+                getResponse = fetchData(urlString);
+                result = GcmNetworkManager.RESULT_SUCCESS;
+                setStockStatus(mContext, STOCK_STATUS_OK);
+                try {
+                    ContentValues contentValues = new ContentValues();
+                    // update ISCURRENT to 0 (false) so new data is current
+                    if (isUpdate) {
+                        contentValues.put(QuoteColumns.ISCURRENT, 0);
+                        mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
+                                null, null);
+                    }
+
+                    if (params.getTag().equals(TaskTagKind.HISTORIC)) {
+                        // Historical DB insert
+                        mContext.getContentResolver().applyBatch(HistoricalProvider.AUTHORITY,
+                                Utils.historicalJsonContentVals(getResponse));
+                    } else {
+                        // This insert already existed for the Main screen and Quote DB
+
+                        // Also trying to add invalid stock name from user input somehow....
+                        ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
+                        if (params.getTag().equals(TaskTagKind.ADD) && (checkDbOperation == null || checkDbOperation.isEmpty())) {
+                            Log.d(LOG_TAG, "INVALID STOCK NAME. Response was: " + getResponse);
+                            //ADD operation failed, return result to the StockIntentService
+                            return MyStocksFragment.ADD_FAILED;
+                        }
+
+                        mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
+                                checkDbOperation);
+                    }
+                } catch (RemoteException | OperationApplicationException e) {
+                    Log.e(LOG_TAG, "Error applying batch insert", e);
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, "Error Response returned threw JSONException", e);
+                    return -88;
+                }
+            } catch (IOException e) {
+                setStockStatus(mContext, STOCK_INVALID_SERVER);
+                e.printStackTrace();
+            }
+        }
 
     /*
         Widget - Notify the WidgetMainProvider through WidgetMainService action
      */
-    Intent intent = new Intent(STOCK_WIDGET_DATA_UPDATED).setPackage(mContext.getPackageName());
-    mContext.sendBroadcast(intent);
+        Intent intent = new Intent(STOCK_WIDGET_DATA_UPDATED).setPackage(mContext.getPackageName());
+        mContext.sendBroadcast(intent);
 
-    return result;
-  }
+        return result;
+    }
 
-  /*
-    EmptyView: Provide Detailed info to help the user what went wrong when showing an empty screen.
-   */
-  @Retention(RetentionPolicy.SOURCE)
-  @IntDef ({STOCK_STATUS_OK, STOCK_INVALID_NAME, STOCK_STATUS_NOT_CONNECTED, STOCK_INVALID_SERVER, STOCK_STATUS_UNKNOWN})
+    /*
+      EmptyView: Provide Detailed info to help the user what went wrong when showing an empty screen.
+     */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({STOCK_STATUS_OK, STOCK_INVALID_NAME, STOCK_STATUS_NOT_CONNECTED, STOCK_INVALID_SERVER, STOCK_STATUS_UNKNOWN})
 
-  public @interface StockStatusDefinitions{}
-  public static final int STOCK_STATUS_OK=0;
-  public static final int STOCK_INVALID_NAME=1;
-  public static final int STOCK_STATUS_NOT_CONNECTED=2;
-  public static final int STOCK_INVALID_SERVER=3;
-  public static final int STOCK_STATUS_UNKNOWN=4;
+    public @interface StockStatusDefinitions {
+    }
 
-  public static void setStockStatus(Context context, @StockStatusDefinitions int status){
-    SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
-    SharedPreferences.Editor editor = shp.edit();
-    editor.putInt(context.getString(R.string.pref_stock_status), status).commit();
-  }
+    public static final int STOCK_STATUS_OK = 0;
+    public static final int STOCK_INVALID_NAME = 1;
+    public static final int STOCK_STATUS_NOT_CONNECTED = 2;
+    public static final int STOCK_INVALID_SERVER = 3;
+    public static final int STOCK_STATUS_UNKNOWN = 4;
 
+    public static void setStockStatus(Context context, @StockStatusDefinitions int status) {
+        SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = shp.edit();
+        editor.putInt(context.getString(R.string.pref_stock_status), status).commit();
+    }
 }

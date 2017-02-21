@@ -21,7 +21,7 @@ public class StockDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_line_graph);
 
-        if (savedInstanceState == null){
+        if (savedInstanceState == null) {
 
             // Following code during Refactoring of DetailFragment to its own class
             Bundle args = new Bundle();

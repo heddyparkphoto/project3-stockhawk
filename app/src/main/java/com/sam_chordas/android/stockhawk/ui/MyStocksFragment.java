@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -45,8 +46,7 @@ import java.util.Locale;
  * Created by hyeryungpark on 12/11/16.
  */
 public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
-        SharedPreferences.OnSharedPreferenceChangeListener
-{
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     static final String LOG_TAG = MyStocksFragment.class.getSimpleName();
 
@@ -59,6 +59,9 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
     boolean isConnected;
     private static String mNewStockName;
     private View mRootView;
+    private TaskHelper mResultReceiverHelper;
+    public static final int ADD_FAILED = -99;
+    public static final String RECEIVER = "receiver";
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -71,12 +74,12 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
         // The intent service is for executing immediate pulls from the Yahoo API
         // GCMTaskService can only schedule tasks, they cannot execute immediately
         mServiceIntent = new Intent(mContext, StockIntentService.class);
-        if (savedInstanceState == null){
+        if (savedInstanceState == null) {
             // Run the initialize task service so that some stocks appear upon an empty database
             mServiceIntent.putExtra("tag", TaskTagKind.INIT);
-            if (isConnected){
+            if (isConnected) {
                 mContext.startService(mServiceIntent);
-            } else{
+            } else {
                 networkToast();
             }
         }
@@ -89,12 +92,13 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
 
         recyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(mContext,
                 new RecyclerViewItemClickListener.OnItemClickListener() {
-                    @Override public void onItemClick(View v, int position) {
+                    @Override
+                    public void onItemClick(View v, int position) {
                         //TODO:
                         // do something on item click
-                        String itemSymbol = ((TextView)v.findViewById(R.id.stock_symbol)).getText().toString();
+                        String itemSymbol = ((TextView) v.findViewById(R.id.stock_symbol)).getText().toString();
 
-                        ((MyStocksClickListener)getActivity()).OnStockItemClick(itemSymbol);
+                        ((MyStocksClickListener) getActivity()).OnStockItemClick(itemSymbol);
 //                        // Let's try explicit Intent to launch the StockDetailActivity
 //                        Intent intent = new Intent(mContext, StockDetailActivity.class);
 //                        intent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, itemSymbol);
@@ -107,25 +111,30 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
         FloatingActionButton fab = (FloatingActionButton) mRootView.findViewById(R.id.fab);
         fab.attachToRecyclerView(recyclerView);
         fab.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                mNewStockName = null;
+            @Override
+            public void onClick(View v) {
+
                 isConnected = Utils.isConnected(mContext);
-                if (isConnected){
+                if (isConnected) {
                     new MaterialDialog.Builder(mContext).title(R.string.symbol_search)
                             .content(R.string.content_test)
                             .inputType(InputType.TYPE_CLASS_TEXT)
                             .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
-                                @Override public void onInput(MaterialDialog dialog, CharSequence input) {
+                                @Override
+                                public void onInput(MaterialDialog dialog, CharSequence input) {
                                     // On FAB click, receive user input. Make sure the stock doesn't already exist
                                     // in the DB and proceed accordingly
-                                    String inputToUpper=null;
-                                    if (input!=null){
+                                    String inputToUpper = null;
+                                    if (input != null) {
                                         inputToUpper = input.toString().toUpperCase();
                                     }
+
+                                    mNewStockName = inputToUpper;
+
                                     Cursor c = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                                            new String[] { QuoteColumns.SYMBOL }, QuoteColumns.SYMBOL + "= ?",
+                                            new String[]{QuoteColumns.SYMBOL}, QuoteColumns.SYMBOL + "= ?",
                                             //new String[] { input.toString() }, null);
-                                            new String[] { inputToUpper }, null);
+                                            new String[]{inputToUpper}, null);
                                     if (c.getCount() != 0) {
                                         Toast toast =
                                                 Toast.makeText(mContext, "This stock is already saved!",
@@ -138,8 +147,26 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                                         // Add the stock to DB
                                         mServiceIntent.putExtra("tag", TaskTagKind.ADD);
                                         mServiceIntent.putExtra("symbol", input.toString());
-                                        mNewStockName = input.toString();
+
+                                        mResultReceiverHelper = new TaskHelper(new Handler());
+                                        mResultReceiverHelper.setReceiver(
+                                                new TaskHelper.Receiver() {
+                                                    @Override
+                                                    public void onReceiveResult(int resultCode, Bundle resultData) {
+                                                        String msg = resultData.getString(Intent.EXTRA_TEXT);
+                                                        if (resultCode==StockTaskService.STOCK_INVALID_NAME){
+                                                            msg = String.format(Locale.US, getString(R.string.stock_not_found), mNewStockName);
+                                                        }
+                                                        Toast toast = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
+                                                        toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                                                        toast.show();
+
+                                                    }
+                                                });
+
+                                        mServiceIntent.putExtra(RECEIVER, mResultReceiverHelper);
                                         mContext.startService(mServiceIntent);
+
                                     }
                                 }
                             })
@@ -155,7 +182,7 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
         mItemTouchHelper = new ItemTouchHelper(callback);
         mItemTouchHelper.attachToRecyclerView(recyclerView);
 
-        if (isConnected){
+        if (isConnected) {
             long period = 3600L;
             long flex = 10L;
 
@@ -178,10 +205,10 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args){
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // This narrows the return to only the stocks that are most current.
         return new CursorLoader(mContext, QuoteProvider.Quotes.CONTENT_URI,
-                new String[]{ QuoteColumns._ID, QuoteColumns.SYMBOL, QuoteColumns.BIDPRICE,
+                new String[]{QuoteColumns._ID, QuoteColumns.SYMBOL, QuoteColumns.BIDPRICE,
                         QuoteColumns.PERCENT_CHANGE, QuoteColumns.CHANGE, QuoteColumns.ISUP},
                 QuoteColumns.ISCURRENT + " = ?",
                 new String[]{"1"},
@@ -189,14 +216,15 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data){
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mCursorAdapter.swapCursor(data);
         mCursor = data;
 
         updateEmptyView();
     }
+
     @Override
-    public void onLoaderReset(Loader<Cursor> loader){
+    public void onLoaderReset(Loader<Cursor> loader) {
         mCursorAdapter.swapCursor(null);
     }
 
@@ -205,7 +233,7 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
         String message = getString(R.string.empty_view_textview);
 
         int status = Utils.getStockStatus(mContext);
-        switch (status){
+        switch (status) {
             case StockTaskService.STOCK_STATUS_OK:
                 break;
             case StockTaskService.STOCK_STATUS_NOT_CONNECTED:
@@ -221,15 +249,11 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                 break;
         }
 
-        if (mCursorAdapter.getItemCount()==0) {
+        if (mCursorAdapter.getItemCount() == 0) {
             TextView emptyview = (TextView) mRootView.findViewById(R.id.recycler_view_stocks_empty);
             if (emptyview != null) {
                 emptyview.setText(message);
             }
-        } else if (status==StockTaskService.STOCK_INVALID_NAME){
-            Toast toast = Toast.makeText(mContext, message, Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-            toast.show();
         }
     }
 
@@ -244,8 +268,8 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.d(LOG_TAG, "Shared pref changed! Key is "+key);
-        if (key.compareTo(getString(R.string.pref_stock_status)) == 0){
+        Log.d(LOG_TAG, "Shared pref changed! Key is " + key);
+        if (key.compareTo(getString(R.string.pref_stock_status)) == 0) {
             updateEmptyView();
         }
     }
@@ -259,11 +283,13 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
-    public void networkToast(){
+    public void networkToast() {
         Toast.makeText(mContext, getString(R.string.empty_network_not_connected), Toast.LENGTH_SHORT).show();
     }
 
-    public interface MyStocksClickListener{
+    public interface MyStocksClickListener {
         public void OnStockItemClick(String stockSymbol);
     }
+
+
 }

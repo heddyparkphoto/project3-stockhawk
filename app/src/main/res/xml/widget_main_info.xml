@@ -4,6 +4,7 @@
 
     android:initialLayout="@layout/widget_main_layout"
     android:initialKeyguardLayout="@layout/widget_main_layout"
+
     android:minHeight="@dimen/widget_main_default_height"
     android:minWidth="@dimen/widget_main_default_width"
     android:updatePeriodMillis="0"
@@ -11,7 +12,7 @@
     android:minResizeHeight="@dimen/widget_main_min_resize_height"
     android:minResizeWidth="@dimen/widget_main_min_resize_width"
 
-    android:previewImage="@drawable/widget_main"
+    android:previewImage="@drawable/widget_mini"
 
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen|keyguard"

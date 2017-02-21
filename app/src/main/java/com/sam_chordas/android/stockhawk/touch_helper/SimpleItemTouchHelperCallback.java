@@ -12,60 +12,60 @@ import com.sam_chordas.android.stockhawk.service.StockTaskService;
  * credit to Paul Burke (ipaulpro)
  * this class enables swipe to delete in RecyclerView
  */
-public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback{
-  private final ItemTouchHelperAdapter mAdapter;
-  public static final float ALPHA_FULL = 1.0f;
+public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
+    private final ItemTouchHelperAdapter mAdapter;
+    public static final float ALPHA_FULL = 1.0f;
 
-  public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter){
-    mAdapter = adapter;
-  }
-
-  @Override
-  public boolean isItemViewSwipeEnabled(){
-    return true;
-  }
-
-  @Override
-  public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder){
-    final int dragFlags = 0;
-    final int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
-    return makeMovementFlags(dragFlags, swipeFlags);
-  }
-
-  @Override
-  public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder sourceViewHolder, RecyclerView.ViewHolder targetViewHolder){
-    return true;
-  }
-
-  @Override
-  public void onSwiped(RecyclerView.ViewHolder viewHolder, int i){
-    mAdapter.onItemDismiss(viewHolder.getAdapterPosition());
-  }
-
-
-  @Override
-  public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState){
-    if (actionState != ItemTouchHelper.ACTION_STATE_IDLE){
-      ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
-      itemViewHolder.onItemSelected();
+    public SimpleItemTouchHelperCallback(ItemTouchHelperAdapter adapter) {
+        mAdapter = adapter;
     }
 
-    super.onSelectedChanged(viewHolder, actionState);
-  }
+    @Override
+    public boolean isItemViewSwipeEnabled() {
+        return true;
+    }
 
-  @Override
-  public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-    super.clearView(recyclerView, viewHolder);
+    @Override
+    public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+        final int dragFlags = 0;
+        final int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+        return makeMovementFlags(dragFlags, swipeFlags);
+    }
 
-    ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
-    itemViewHolder.onItemClear();
+    @Override
+    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder sourceViewHolder, RecyclerView.ViewHolder targetViewHolder) {
+        return true;
+    }
+
+    @Override
+    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
+        mAdapter.onItemDismiss(viewHolder.getAdapterPosition());
+    }
+
+
+    @Override
+    public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+        if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
+            ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+            itemViewHolder.onItemSelected();
+        }
+
+        super.onSelectedChanged(viewHolder, actionState);
+    }
+
+    @Override
+    public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+        super.clearView(recyclerView, viewHolder);
+
+        ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+        itemViewHolder.onItemClear();
 
      /*
         Widget - Notify that an item was cleared so that the Widget is refreshed.
         This call invokes the WidgetMainProvider.onReceive() which kicks off AppWidget dataChanged processes
      */
-    Context context = recyclerView.getContext();
-    Intent intent = new Intent(StockTaskService.STOCK_WIDGET_DATA_UPDATED).setPackage(context.getPackageName());
-    context.sendBroadcast(intent);
-  }
+        Context context = recyclerView.getContext();
+        Intent intent = new Intent(StockTaskService.STOCK_WIDGET_DATA_UPDATED).setPackage(context.getPackageName());
+        context.sendBroadcast(intent);
+    }
 }

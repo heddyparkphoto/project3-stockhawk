@@ -14,6 +14,7 @@ import android.widget.RemoteViews;
 
 import com.sam_chordas.android.stockhawk.R;
 import com.sam_chordas.android.stockhawk.service.StockTaskService;
+import com.sam_chordas.android.stockhawk.ui.MyStocksActivity;
 import com.sam_chordas.android.stockhawk.ui.StockDetailActivity;
 
 /**
@@ -40,11 +41,16 @@ public class WidgetMainProvider extends AppWidgetProvider {
 
         for (int appWidgetOne: appWidgetIds){
 
-            Intent intent = new Intent(context, WidgetMainService.class);
+//            Intent intent = new Intent(context, WidgetMainService.class);
 
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetOne);
+//            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetOne);
 
             RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_main_layout);
+
+            // Click enables widget title bar to load the Main activity UI
+            Intent intent = new Intent(context, MyStocksActivity.class);
+            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+            rv.setOnClickPendingIntent(R.id.widget_title_bar, pendingIntent);
 
             // setRemoteAdapter() method obtains the RemoteViewsFactory declared in the WidgetMainService.java
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH){
@@ -53,15 +59,21 @@ public class WidgetMainProvider extends AppWidgetProvider {
                 setRemoteAdapterV11(context, rv);
             }
 
+            // Use boolean resource in values-sw600dp to switch which Activity to load in the Template,
+            // and if master/detail UI, pass in argument for both panels have data
+            boolean useDetailActivity = context.getResources().getBoolean(R.bool.use_detail_activity);
+
             // Create an intent that launches each details for now, since I did not code the main yet
             // this clicking is NOT WORKING YET!!!
-            Intent clickIntent = new Intent(context, StockDetailActivity.class);
+            Intent clickIntent = useDetailActivity?
+                        new Intent(context, StockDetailActivity.class):
+                        new Intent(context, MyStocksActivity.class);
 
-            PendingIntent pendingIntent = TaskStackBuilder.create(context)
+            PendingIntent pendingIntentTemplate = TaskStackBuilder.create(context)
                     .addNextIntentWithParentStack(clickIntent)
                     .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            rv.setPendingIntentTemplate(R.id.widget_id_stack, pendingIntent);
+            rv.setPendingIntentTemplate(R.id.widget_id_stack, pendingIntentTemplate);
             appWidgetManager.updateAppWidget(appWidgetOne, rv);
         }
     }
@@ -73,7 +85,7 @@ public class WidgetMainProvider extends AppWidgetProvider {
 */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setRemoteAdapter(Context context, @NonNull final RemoteViews views) {
-        views.setRemoteAdapter(0, R.id.widget_id_stack,
+        views.setRemoteAdapter( R.id.widget_id_stack,
                 new Intent(context, WidgetMainService.class));
     }
 

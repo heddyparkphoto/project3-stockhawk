@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +29,7 @@ import com.sam_chordas.android.stockhawk.data.HistoricalColumns;
 import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
+import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.TaskTagKind;
@@ -53,22 +53,14 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     private String mOfSymbol;
     private LineChart mLineChart;
     private TextView mStockTitle;
+    private QuoteCursorAdapter mQuoteCursorAdapter;
+    private boolean mRefresh;
+    private final static String STOCK_SYMBOL_PLACTHOLDER = "";  // Default title when no data
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_line_graph, container, false);
-
-        // Following coded during Tablet and onLocationChange addition
-        Bundle bundle = getArguments();
-        if (bundle != null) {
-            mOfSymbol = bundle.getString(StockDetailFragment.DETAIL_ARGUMENT);
-            Log.d(LOG_TAG, "getArgument success getting symbol "+mOfSymbol);
-        } else {
-            Log.d(LOG_TAG, "getArgument failed to retrieve symbol "+mOfSymbol);
-            // JUST HARD-CODE TO TEMPORARILY NOT TO CRASH WHEN nothing is selected
-            mOfSymbol = "YHOO";
-        }
 
 //        View rootView = inflater.inflate(R.layout.fragment_line_graph, container, false);
 
@@ -87,13 +79,13 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
         return new CursorLoader(getActivity(), HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
                 null, HistoricalColumns.SYMBOL + "= ?",
-                new String[] {mOfSymbol}, HistoricalColumns.DATE_TEXT);
+                new String[]{mOfSymbol}, HistoricalColumns.DATE_TEXT);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
 
-        if (mLineChart!=null){
+        if (mLineChart != null) {
             mLineChart.invalidate();
         }
 
@@ -116,58 +108,70 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
         Bundle bundle = getArguments();
 
-        if (bundle!=null) {
-            mOfSymbol = bundle.getString(StockDetailFragment.DETAIL_ARGUMENT, "SBUX"); //just for test for now.
-        } else {
+        /* The condition where default stock is used.  They both can occur in Two-pane mode
+         * if Refresh is needed because the user just swiped/deleted a stock in the master panel
+         * or
+         * it is a first screen and the user did not picked any stocks in the master panel yet.
+         */
+        if (mRefresh || null==bundle){
             Cursor c = context.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                    new String[] { QuoteColumns.SYMBOL }, null,
-                    //new String[] { input.toString() }, null);
+                    new String[]{QuoteColumns.SYMBOL}, null,
                     null, null);
-//            if (c.getCount() != 0) {
-                if (c.moveToFirst()){
-                    mOfSymbol = c.getString(0);
-                }
-//            }
+            if (c.moveToFirst()) {
+                mOfSymbol = c.getString(0);
+            } else {
+                mOfSymbol = STOCK_SYMBOL_PLACTHOLDER;
+            }
+        } else {
+            if (bundle != null) {
+                mOfSymbol = bundle.getString(StockDetailFragment.DETAIL_ARGUMENT, "SBUX"); //just for test for now.
+            }
         }
-            // Set title for this instance
-            if (mStockTitle!=null){
-                String caps= mOfSymbol.toUpperCase();
-                mStockTitle.setText(caps);
-            }
+                // Set title for this instance
+                if (mStockTitle != null){
+                    if (mOfSymbol.compareTo(STOCK_SYMBOL_PLACTHOLDER)==0) {
+                        mStockTitle.setText(R.string.a11y_stock_symbol);
+                    } else {
+                        String caps = mOfSymbol.toUpperCase();
+                        mStockTitle.setText(caps);
+                    }
+                }
 
-            // Make sure the history of the stock doesn't already exist in the DB
-            // NOTE: Later, in Phase 2, I should implement to refresh data if data is old.  For now, I am content.
-            Cursor cursor = context.getContentResolver().query(HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
-                    null, HistoricalColumns.SYMBOL + "= ?",
-                    new String[] {mOfSymbol}, HistoricalColumns.DATE_TEXT);
-            if (cursor.getCount() != 0) {
-                drawLineChart(cursor);
-            }
-                /*
-                    We can ask our IntentService to kick off another yql that will populate our historical table
-                    which we can ask the Loader to get the data on a background thread-way
-                    well, at least that's what the intention is!  Intention not the android Intent!
-                 */
-            else if (Utils.isConnected(getActivity())){
+                // Make sure the history of the stock doesn't already exist in the DB
+                // NOTE: Later, in Phase 2, I should implement to refresh data if data is old.  For now, I am content.
+                Cursor cursor = context.getContentResolver().query(HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
+                        null, HistoricalColumns.SYMBOL + "= ?",
+                        new String[]{mOfSymbol}, HistoricalColumns.DATE_TEXT);
+                if (cursor.getCount() != 0 || mOfSymbol.compareTo(STOCK_SYMBOL_PLACTHOLDER)==0) {
+                    drawLineChart(cursor);
+                }
+        /*
+            We can ask our IntentService to kick off another yql that will populate our historical table
+            which we can ask the Loader to get the data on a background thread-way
+            well, at least that's what the intention is!  Intention not the android Intent!
+         */
+                else if (Utils.isConnected(getActivity())) {
 
-                getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
+                    getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
 
-                mServiceIntent = new Intent(context, StockIntentService.class);
+                    mServiceIntent = new Intent(context, StockIntentService.class);
                     /*  The tag and the key/value that I refactor-ed the existing methods
                         to process the new yql queries to get what we want: historical data
                     */
-                mServiceIntent.putExtra("tag", TaskTagKind.HISTORIC);
-                mServiceIntent.putExtra("symbol_h", mOfSymbol);
-                context.startService(mServiceIntent);
-            } else {
-                Toast.makeText(context, getString(R.string.empty_network_not_connected), Toast.LENGTH_LONG).show();
-            }
+                    mServiceIntent.putExtra("tag", TaskTagKind.HISTORIC);
+                    mServiceIntent.putExtra("symbol_h", mOfSymbol);
+                    context.startService(mServiceIntent);
+                } else {
+                    Toast.makeText(context, getString(R.string.empty_network_not_connected), Toast.LENGTH_LONG).show();
+                }
+//            }
 //        }
-//    } else {
-//        Log.d(LOG_TAG, "Intent and bundle is null. Cannot get symbol to look up.");
-//    }
-        super.onActivityCreated(savedInstanceState);
+//            } else {
+//                Log.d(LOG_TAG, "Intent and bundle is null. Cannot get symbol to look up.");
+//            }
+//        }
 
+        super.onActivityCreated(savedInstanceState);
     }
 
     private void drawLineChart(Cursor cursor) {
@@ -182,9 +186,9 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
             set User-Friendly message and invoke invalidate() to have the LineChart wait
             onLoadFinished() invokes this method again.
          */
-        if (null==cursor || plotNum == 0){
+        if (null == cursor || plotNum == 0) {
 
-            if (mLineChart!=null) {
+            if (mLineChart != null) {
                 if (Utils.isConnected(getActivity())) {
                     mLineChart.setNoDataText(getString(R.string.linechart_no_data));
                 } else {
@@ -203,7 +207,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
             date = cursor.getString(cursor.getColumnIndex(HistoricalColumns.DATE_TEXT));
             high = cursor.getFloat(cursor.getColumnIndex(HistoricalColumns.HIGH));
             entries.add(new Entry(x, high));
-            x = x + 1.0f;   // My own set up: each plot point seems to set by each day, not smaller.
+            x = x + 1.0f;   // 1.0f increment seems to work best: one plot point per day, not smaller.
             String unitD = shortenDate(date);  // Display mm/dd as X-axis unit
             dates.add(unitD);
         }
@@ -227,8 +231,8 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         //add to the sets
         lineDataSets.add(lineDataSet1);
 
-        // This may be a hack but have seen the mLineChart being null.  Re-get it to initiate.
-        if (null==mLineChart){
+        // This may be a hack but have seen the mLineChart being null.  Re-get it if null.
+        if (null == mLineChart) {
             mLineChart = (LineChart) mRootView.findViewById(R.id.linechart);
         }
 
@@ -241,7 +245,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
         //setData to the LineChart by constructing the LineData (xStringArray, LineDataSets)
         mLineChart.setData(new LineData(lineDataSets));
-        //mLineChart.setVisibleXRangeMaximum(35f);    //Commenting out during phase 2: did not work well with shorter ranges - experiment on the phone to get good curve
+        //mLineChart.setVisibleXRangeMaximum(35f);    //Comment out if using shorter ranges such as 14 days - experiment on the phone to get good curve
     }
 
     /*
@@ -251,7 +255,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     private String shortenDate(String date) {
         String localD = date;
 
-        if (date==null || date.length() < 6){
+        if (date == null || date.length() < 6) {
             return localD;
         }
 
@@ -260,24 +264,30 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         return localD;
     }
 
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//    }
-
     @Override
     public void onResume() {
         super.onResume();
-//
-//        /*
-//         We want to initialize and refresh (invalidate() seems to does that according to authors
-//         every time here instead of onCreate() which only occurs once.
-//        */
+
+        /*
+         We want to initialize and refresh (invalidate() seems to does that according to authors
+         every time here instead of onCreate() which only occurs once.
+        */
         mLineChart = (LineChart) mRootView.findViewById(R.id.linechart);
         mLineChart.invalidate();
-//
-////         Without init-ing here, there were no data - not sure it is the only way
-////         to ensure, but it is better than crashing.
+
+        // Without init-ing here, there were no data - not sure it is the only way
+         //to ensure, but it is better than crashing.
         getLoaderManager().restartLoader(HISTORICAL_CURSOR_LOADER, null, this);
     }
-  }
+
+    /*
+        When UI is in the Two-pane mode, and a stock is removed from the 'master' panel,
+        refresh the 'detail' panel accordingly.
+        To do so, QuoteCursorAdapter notifies the MyStocksActivity with FLAG STRING during onItemDismiss(),
+        and MyStocksActivity invokes this method as it replaces the StockDetailFragment
+        StockDetailFragment onActivityCreated refreshes
+     */
+    public void dataChanged(){
+        this.mRefresh = true;
+    }
+}
