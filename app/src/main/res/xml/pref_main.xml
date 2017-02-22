@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference
+        android:title="@string/pref_historic_days_title"
+        android:key="@string/pref_historic_key"
+        android:entries="@array/ui_labels"
+        android:entryValues="@array/day_values_to_save"
+        android:defaultValue="14"
+    />
+</PreferenceScreen>
