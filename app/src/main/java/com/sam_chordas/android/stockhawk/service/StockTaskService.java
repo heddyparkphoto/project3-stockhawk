@@ -80,7 +80,9 @@ public class StockTaskService extends GcmTaskService {
             if (params.getTag().equals(TaskTagKind.HISTORIC)) {
                 String of_symbol = params.getExtras().getString("symbol_h");
 
-                String[] spanDays = Utils.formatTimeSpanForApi(StockDetailFragment.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
+                String[] spanDays = Utils.formatTimeSpanForApi(StockDetailFragment.mPreferenceDays);
+
+                        //StockDetailFragment.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
 
                 urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
                         + "symbol = \"" + of_symbol + "\" and startDate = \"" + spanDays[0] + "\" and endDate = \"" + spanDays[1] + "\"", "UTF-8"));

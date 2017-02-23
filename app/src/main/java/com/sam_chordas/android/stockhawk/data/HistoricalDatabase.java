@@ -10,7 +10,7 @@ import net.simonvt.schematic.annotation.Table;
 public class HistoricalDatabase {
     private HistoricalDatabase(){}
 
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
 
     @Table(HistoricalColumns.class) public static final String HISTORICAL = "historical";
 }

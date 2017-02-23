@@ -23,4 +23,7 @@ public class HistoricalColumns {
 
     @DataType(DataType.Type.REAL)
     public static final String LOW = "low_price";
+
+    @DataType(DataType.Type.TEXT) @NotNull
+    public static final String UPDATED_DATE_TEXT = "updated_date_text";
 }

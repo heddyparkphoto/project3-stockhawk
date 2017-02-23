@@ -2,14 +2,17 @@ package com.sam_chordas.android.stockhawk.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +38,7 @@ import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.TaskTagKind;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by hyeryungpark on 12/11/16.
@@ -47,6 +51,8 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
     public static final String OF_STOCK_SYMBOL = "OF_STOCK";
     public static final int SPAN_DAYS = 14;
+    public static int mPreferenceDays;
+    private static int oldPreferenceDays;
 
     private Intent mServiceIntent;
     private final static int HISTORICAL_CURSOR_LOADER = 4;
@@ -69,6 +75,15 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         mLineChart.invalidate();
 
         mStockTitle = (TextView) mRootView.findViewById(R.id.graphTitle);
+
+        oldPreferenceDays = mPreferenceDays;
+
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String pref_span_days = shared.getString(getString(R.string.pref_historic_key), "14");
+        Log.d(LOG_TAG, "Old pref days "+oldPreferenceDays);
+        mPreferenceDays = Integer.parseInt(pref_span_days);
+        Log.d(LOG_TAG, "After pref days "+mPreferenceDays);
+
 
 //        return rootView;
         return mRootView;
@@ -127,43 +142,61 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
                 mOfSymbol = bundle.getString(StockDetailFragment.DETAIL_ARGUMENT, "SBUX"); //just for test for now.
             }
         }
-                // Set title for this instance
-                if (mStockTitle != null){
-                    if (mOfSymbol.compareTo(STOCK_SYMBOL_PLACTHOLDER)==0) {
-                        mStockTitle.setText(R.string.a11y_stock_symbol);
-                    } else {
-                        String caps = mOfSymbol.toUpperCase();
-                        mStockTitle.setText(caps);
-                    }
-                }
 
-                // Make sure the history of the stock doesn't already exist in the DB
-                // NOTE: Later, in Phase 2, I should implement to refresh data if data is old.  For now, I am content.
-                Cursor cursor = context.getContentResolver().query(HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
-                        null, HistoricalColumns.SYMBOL + "= ?",
-                        new String[]{mOfSymbol}, HistoricalColumns.DATE_TEXT);
-                if (cursor.getCount() != 0 || mOfSymbol.compareTo(STOCK_SYMBOL_PLACTHOLDER)==0) {
-                    drawLineChart(cursor);
-                }
-        /*
-            We can ask our IntentService to kick off another yql that will populate our historical table
-            which we can ask the Loader to get the data on a background thread-way
-            well, at least that's what the intention is!  Intention not the android Intent!
-         */
-                else if (Utils.isConnected(getActivity())) {
+        // Set title for this instance
+        if (mStockTitle != null){
+            if (mOfSymbol.compareTo(STOCK_SYMBOL_PLACTHOLDER)==0) {
+                mStockTitle.setText(R.string.a11y_stock_symbol);
+            } else {
+                String caps = mOfSymbol.toUpperCase();
+                mStockTitle.setText(caps);
+            }
+        }
 
-                    getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
+        // Make sure the history of the stock doesn't already exist in the DB
+        // NOTE: Later, in Phase 2, I should implement to refresh data if data is old.  For now, I am content.
+        boolean shouldRefetch = true;
+        Cursor cursor = context.getContentResolver().query(HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
+                null, HistoricalColumns.SYMBOL + "= ?",
+                new String[]{mOfSymbol}, HistoricalColumns.DATE_TEXT);
 
-                    mServiceIntent = new Intent(context, StockIntentService.class);
-                    /*  The tag and the key/value that I refactor-ed the existing methods
-                        to process the new yql queries to get what we want: historical data
-                    */
-                    mServiceIntent.putExtra("tag", TaskTagKind.HISTORIC);
-                    mServiceIntent.putExtra("symbol_h", mOfSymbol);
-                    context.startService(mServiceIntent);
-                } else {
-                    Toast.makeText(context, getString(R.string.empty_network_not_connected), Toast.LENGTH_LONG).show();
+        if (cursor.getCount() > 0) {
+            int updatedCol = cursor.getColumnIndex(HistoricalColumns.UPDATED_DATE_TEXT);
+            if (cursor.moveToFirst()) {
+                String updatedDateStr = cursor.getString(updatedCol);
+                String todateStr = Utils.getUpdatedDateText(Calendar.getInstance().getTime());
+
+                if (updatedDateStr.equals(todateStr) && cursor.getCount() >= mPreferenceDays) {
+                    shouldRefetch = false;
                 }
+            }
+        }
+
+        if (mOfSymbol.compareTo(STOCK_SYMBOL_PLACTHOLDER)==0 || !shouldRefetch) { //!shouldRefetch) {
+            drawLineChart(cursor);
+        } else if (Utils.isConnected(getActivity())) {
+            /*
+                We can ask our IntentService to kick off another yql that will populate our historical table
+                which we can ask the Loader to get the data on a background thread-way
+                well, at least that's what the intention is!  Intention not the android Intent!
+             */
+
+            getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
+                // delete old data
+//                getActivity().getContentResolver().delete(HistoricalProvider.Historical.CONTENT_URI,
+//                        HistoricalColumns.SYMBOL + "= ?",
+//                        new String[]{mOfSymbol});
+//
+            mServiceIntent = new Intent(context, StockIntentService.class);
+            /*  The tag and the key/value that I refactor-ed the existing methods
+                to process the new yql queries to get what we want: historical data
+            */
+            mServiceIntent.putExtra("tag", TaskTagKind.HISTORIC);
+            mServiceIntent.putExtra("symbol_h", mOfSymbol);
+            context.startService(mServiceIntent);
+        } else {
+            Toast.makeText(context, getString(R.string.empty_network_not_connected), Toast.LENGTH_LONG).show();
+        }
 //            }
 //        }
 //            } else {
@@ -179,6 +212,12 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         ArrayList<Entry> entries = new ArrayList<>();
         ArrayList<String> dates = new ArrayList<>();
         int plotNum = cursor.getCount();
+        int plotCounter = 0;
+
+        int newFirstPosition = 0;
+        if (plotNum > (mPreferenceDays - 1)) {
+            newFirstPosition = plotNum - (mPreferenceDays-1);
+        }
 
         /*
             We can reach here without data if we needed a fresh data,
@@ -203,13 +242,18 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         float high;
         float x = 0f;
 
-        while (cursor.moveToNext()) {
-            date = cursor.getString(cursor.getColumnIndex(HistoricalColumns.DATE_TEXT));
-            high = cursor.getFloat(cursor.getColumnIndex(HistoricalColumns.HIGH));
-            entries.add(new Entry(x, high));
-            x = x + 1.0f;   // 1.0f increment seems to work best: one plot point per day, not smaller.
-            String unitD = shortenDate(date);  // Display mm/dd as X-axis unit
-            dates.add(unitD);
+        if (cursor.moveToPosition(newFirstPosition)) {
+            while (cursor.moveToNext()) { //moveToNext()) {
+                if (plotCounter <= mPreferenceDays) {
+                    date = cursor.getString(cursor.getColumnIndex(HistoricalColumns.DATE_TEXT));
+                    high = cursor.getFloat(cursor.getColumnIndex(HistoricalColumns.HIGH));
+                    entries.add(new Entry(x, high));
+                    x = x + 1.0f;   // 1.0f increment seems to work best: one plot point per day, not smaller.
+                    String unitD = shortenDate(date);  // Display mm/dd as X-axis unit
+                    dates.add(unitD);
+                    plotCounter++;
+                }
+            }
         }
 
         // Used the new feature in the MPAndroidChart:v3.0.1 to label the X-axis with shortened dates

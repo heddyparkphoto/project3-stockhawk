@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -190,15 +191,25 @@ public class Utils {
         try {
             builder.withValue(HistoricalColumns.SYMBOL, jsonObject.getString("Symbol"));
             builder.withValue(HistoricalColumns.DATE_TEXT, jsonObject.getString("Date"));
+            Log.d(LOG_TAG, "json reply Date: " + jsonObject.getString("Date"));
             // HIGH LOW are REALs, using a convenience method to extract the json string to a float of two decimal point floats
             builder.withValue(HistoricalColumns.HIGH, Float.parseFloat(jsonObject.getString("High")));
             builder.withValue(HistoricalColumns.LOW, Float.parseFloat(jsonObject.getString("Low")));
-
+            // Current Date verify to always provide fresh data starting from today
+            builder.withValue(HistoricalColumns.UPDATED_DATE_TEXT, getUpdatedDateText(Calendar.getInstance().getTime()));
         } catch (JSONException e) {
             e.printStackTrace();
             throw e;
         }
         return builder.build();
+    }
+
+    public static String getUpdatedDateText(Date date){
+        // Current Date verify to always provide fresh data starting from today
+        java.text.SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd", Locale.US);
+        String dateText = dateFormat.format(date);
+        Log.d(LOG_TAG, "Doing Verify: "+ dateText);
+        return dateText;
     }
 
     /*
@@ -224,12 +235,12 @@ public class Utils {
 
         /* Transform to a String that the api expects */
         String endDateFormatted = apiDateFormat.format(historyDate.getTime());
-        Log.d(LOG_TAG, "StockHawk endDate: " + endDateFormatted);
+//        Log.d(LOG_TAG, "StockHawk endDate: " + endDateFormatted);
 
         historyDate.add(Calendar.DATE, (-actualDaysToSubtract));   // use one less as said above.
 
         String startDateFormatted = apiDateFormat.format(historyDate.getTime());
-        Log.d(LOG_TAG, "StockHawk startDate: " + startDateFormatted);
+//        Log.d(LOG_TAG, "StockHawk startDate: " + startDateFormatted);
 
         // populate the returnVal array in the right order
         returnVal[0] = startDateFormatted;

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -78,6 +79,9 @@ public class MyStocksActivity extends AppCompatActivity
             // Coded during Styling the Action bar - remove casted-shadow for onePane device
 //            getSupportActionBar().setElevation(0f);
         }
+
+        // Manage preferences
+        PreferenceManager.setDefaultValues(this, R.xml.pref_main, false);
 
 //
 //        // The intent service is for executing immediate pulls from the Yahoo API
