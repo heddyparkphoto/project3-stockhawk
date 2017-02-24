@@ -7,6 +7,11 @@ import net.simonvt.schematic.annotation.PrimaryKey;
 
 /**
  * Created by hyeryungpark on 11/7/16.
+ *
+ *  Columns of table "historical"
+ *  Use to graph change in price over time.
+ *  Updated by a stock symbol if "UPDATED_DATE_TEXT" column is not today's date or
+ *  needs more days to graph than what the table has already.
  */
 public class HistoricalColumns {
     @DataType(DataType.Type.INTEGER) @PrimaryKey @AutoIncrement

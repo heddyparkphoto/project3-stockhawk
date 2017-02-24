@@ -2,6 +2,8 @@ package com.sam_chordas.android.stockhawk.service;
 
 /**
  * Created by hyeryungpark on 12/9/16.
+ *
+ * Query Tags declaration
  */
 public interface TaskTagKind {
 

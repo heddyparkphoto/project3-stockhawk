@@ -11,6 +11,11 @@ import com.sam_chordas.android.stockhawk.ui.MyStocksFragment;
 /**
  * Created by sam_chordas on 10/1/15.
  */
+/*
+    Updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Add Historical request handling.
+    * Add result handling to give User feedback in case of unexpected failure.
+ */
 public class StockIntentService extends IntentService {
 
     public StockIntentService() {

@@ -19,6 +19,8 @@ import com.sam_chordas.android.stockhawk.ui.StockDetailActivity;
 
 /**
  * Created by hyeryungpark on 11/12/16.
+ *
+ *  Provider class for the Stock Widget
  */
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class WidgetMainProvider extends AppWidgetProvider {
@@ -41,13 +43,9 @@ public class WidgetMainProvider extends AppWidgetProvider {
 
         for (int appWidgetOne: appWidgetIds){
 
-//            Intent intent = new Intent(context, WidgetMainService.class);
-
-//            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetOne);
-
             RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.widget_main_layout);
 
-            // Click enables widget title bar to load the Main activity UI
+            // Click enables widget title bar to load the MyStocksActivity UI
             Intent intent = new Intent(context, MyStocksActivity.class);
             PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
             rv.setOnClickPendingIntent(R.id.widget_title_bar, pendingIntent);
@@ -63,8 +61,7 @@ public class WidgetMainProvider extends AppWidgetProvider {
             // and if master/detail UI, pass in argument for both panels have data
             boolean useDetailActivity = context.getResources().getBoolean(R.bool.use_detail_activity);
 
-            // Create an intent that launches each details for now, since I did not code the main yet
-            // this clicking is NOT WORKING YET!!!
+            // Create an intent that launches each graph in DetailFragment
             Intent clickIntent = useDetailActivity?
                         new Intent(context, StockDetailActivity.class):
                         new Intent(context, MyStocksActivity.class);
@@ -79,9 +76,9 @@ public class WidgetMainProvider extends AppWidgetProvider {
     }
 
     /*
- Sets the remote adapter used to fill in the one item
+        Sets the remote adapter used to fill in the one item
 
- @param views RemoteViews to set the RemoteAdapter
+        @param views RemoteViews to set the RemoteAdapter
 */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void setRemoteAdapter(Context context, @NonNull final RemoteViews views) {

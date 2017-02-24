@@ -9,6 +9,8 @@ import net.simonvt.schematic.annotation.TableEndpoint;
 
 /**
  * Created by hyeryungpark on 11/7/16.
+ *
+ * Provider for Database used to graph change in stock price over time.
  */
 @ContentProvider(authority = HistoricalProvider.AUTHORITY, database = HistoricalDatabase.class)
 public class HistoricalProvider {
@@ -47,6 +49,5 @@ public class HistoricalProvider {
         public static Uri historicalOfSymbol(String symbol){
             return buildUri(Path.HISTORICAL, symbol);
         }
-
     }
 }

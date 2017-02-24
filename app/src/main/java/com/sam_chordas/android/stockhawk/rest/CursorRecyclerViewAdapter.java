@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -14,13 +13,18 @@ import android.widget.TextView;
  *    https://gist.github.com/skyfishjy/443b7448f59be978bc59
  * for the CursorRecyclerViewApater.java code and idea.
  */
+/*
+    updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Add EmptyView - Error handling and User Experience
+
+ */
 public abstract class CursorRecyclerViewAdapter <VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH>{
   private static final String LOG_TAG = CursorRecyclerViewAdapter.class.getSimpleName();
   private Cursor mCursor;
   private boolean dataIsValid;
   private int rowIdColumn;
   private DataSetObserver mDataSetObserver;
-  TextView mEmptyView;
+  private TextView mEmptyView;
 
   public CursorRecyclerViewAdapter(Context context, Cursor cursor, TextView emptyView){
     mCursor = cursor;
@@ -104,8 +108,6 @@ public abstract class CursorRecyclerViewAdapter <VH extends RecyclerView.ViewHol
 
   @Override
   public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
-
-    Log.d(LOG_TAG, "debug!!");
     super.onDetachedFromRecyclerView(recyclerView);
 
   }

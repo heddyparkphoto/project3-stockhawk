@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Binder;
 import android.os.Build;
-import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -17,6 +16,8 @@ import com.sam_chordas.android.stockhawk.ui.StockDetailActivity;
 
 /**
  * Created by hyeryungpark on 11/12/16.
+ *
+ * Remote Views for Widget
  */
 public class WidgetMainService extends RemoteViewsService {
 
@@ -67,7 +68,6 @@ public class WidgetMainService extends RemoteViewsService {
             @Override
             public int getCount() {
                 int t=data==null?0:data.getCount();
-                Log.d(LOG_TAG, "Total rows in the data " + t);
                 return data==null?0:data.getCount();
             }
 

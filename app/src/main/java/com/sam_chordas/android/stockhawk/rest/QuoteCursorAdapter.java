@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,12 +28,16 @@ import java.util.Locale;
  * https://gist.github.com/skyfishjy/443b7448f59be978bc59
  * for the code structure
  */
+/*
+    updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Add Content Descriptions for A11y
+
+ */
 public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAdapter.ViewHolder>
         implements ItemTouchHelperAdapter {
 
     private static Context mContext;
     private static Typeface robotoLight;
-    private boolean isPercent;
 
     public QuoteCursorAdapter(Context context, Cursor cursor, TextView emptyView) {
         super(context, cursor, emptyView);
@@ -48,7 +51,8 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
                 .inflate(R.layout.list_item_quote, parent, false);
         ViewHolder vh = new ViewHolder(itemView);
 
-        itemView.setFocusable(true);  // A11y - Arrow-keys works to move up and down the list
+        /* A11y - Arrow-keys works to move up and down the list */
+        itemView.setFocusable(true);
 
         return vh;
     }
@@ -100,12 +104,12 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         String symbol = c.getString(c.getColumnIndex(QuoteColumns.SYMBOL));
         mContext.getContentResolver().delete(QuoteProvider.Quotes.withSymbol(symbol), null, null);
 
-    /* Invoke RecyclerView's method  */
+        /* Invoke RecyclerView's method  */
         notifyItemRemoved(position);
 
         /* Tell main activity so that it can handle Two-pane UI update */
         notifyStockRemoved();
-    /* Reset status to OK, otherwise previous error message popped up before displaying existing stocks in MyStockActivity */
+        /* Reset status to OK, otherwise previous error message popped up before displaying existing stocks in MyStockActivity */
         StockTaskService.setStockStatus(mContext, StockTaskService.STOCK_STATUS_OK);
     }
 
@@ -144,7 +148,6 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     }
 
     private void notifyStockRemoved() {
-        Log.d("temp", "notify invoked!");
         ((MyStocksFragment.MyStocksClickListener)mContext).OnStockItemClick(MyStocksActivity.REMOVED_FLAG);
     }
 }

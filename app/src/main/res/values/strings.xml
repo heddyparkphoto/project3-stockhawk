@@ -23,8 +23,9 @@
     <string name="title_widget_stack_layout">Stock Hawk</string>
     <string name="a11y_add_a_stock">Add a stock</string>
     <string name="a11y_widget_stock_symbol">stock symbol name</string>
-    <string name="a11y_empty_stocks_list">Nothing to show in Stocks View</string>
+    <string name="a11y_empty_stocks_list">Empty Stocks View</string>
     <string name="a11y_stock_symbol">Stock symbol</string>
+    <string name="a11y_price_over_time">Stock price over time</string>
     <string name="a11y_stock_price">Stock price <xliff:g id="bid_price">%1$s %2$s</xliff:g></string>
     <string name="a11y_stock_change_pct">Change percentage <xliff:g id="pct">%1$s</xliff:g></string>
     <string name="a11y_stock_change_price">Change price <xliff:g id="chg_pr">%1$s</xliff:g></string>

@@ -12,6 +12,10 @@ import com.sam_chordas.android.stockhawk.service.StockTaskService;
  * credit to Paul Burke (ipaulpro)
  * this class enables swipe to delete in RecyclerView
  */
+/*
+    Updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Add Notification Broadcast to clearView() method to clear the item from the Widget when it is in display.
+ */
 public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
     private final ItemTouchHelperAdapter mAdapter;
     public static final float ALPHA_FULL = 1.0f;
@@ -60,10 +64,10 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
         ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
         itemViewHolder.onItemClear();
 
-     /*
-        Widget - Notify that an item was cleared so that the Widget is refreshed.
-        This call invokes the WidgetMainProvider.onReceive() which kicks off AppWidget dataChanged processes
-     */
+        /*
+           Widget - Notify that an item was cleared so that the Widget is refreshed.
+           This call invokes the WidgetMainProvider.onReceive() which kicks off AppWidget dataChanged processes
+        */
         Context context = recyclerView.getContext();
         Intent intent = new Intent(StockTaskService.STOCK_WIDGET_DATA_UPDATED).setPackage(context.getPackageName());
         context.sendBroadcast(intent);

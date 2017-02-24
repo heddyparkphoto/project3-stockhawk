@@ -43,7 +43,15 @@ import com.sam_chordas.android.stockhawk.touch_helper.SimpleItemTouchHelperCallb
 import java.util.Locale;
 
 /**
- * Created by hyeryungpark on 12/11/16.
+ * Refactored majority of functions from MyStocksActivity class created by sam_chordas on 11/9/15.
+ */
+
+/**
+ * Updated by hyeryungpark on 12/11/16 for Udacity project.
+ *  * Add EmptyView with Status message.
+ *  * Implement RecyclerViewItemClickListener.OnItemClickListener to launch Graph in DetailFragment.
+ *  * Add Error handling if Stock symbol search returns with only nulls and inform the user.
+ *
  */
 public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
         SharedPreferences.OnSharedPreferenceChangeListener {
@@ -94,16 +102,8 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                 new RecyclerViewItemClickListener.OnItemClickListener() {
                     @Override
                     public void onItemClick(View v, int position) {
-                        //TODO:
-                        // do something on item click
-                        String itemSymbol = ((TextView) v.findViewById(R.id.stock_symbol)).getText().toString();
-
+                         String itemSymbol = ((TextView) v.findViewById(R.id.stock_symbol)).getText().toString();
                         ((MyStocksClickListener) getActivity()).OnStockItemClick(itemSymbol);
-//                        // Let's try explicit Intent to launch the StockDetailActivity
-//                        Intent intent = new Intent(mContext, StockDetailActivity.class);
-//                        intent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, itemSymbol);
-//                        startActivity(intent);
-
                     }
                 }));
         recyclerView.setAdapter(mCursorAdapter);
@@ -129,11 +129,10 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                                         inputToUpper = input.toString().toUpperCase();
                                     }
 
-                                    mNewStockName = inputToUpper;
+                                    mNewStockName = inputToUpper;   // Stock symbol in DB is upper case
 
                                     Cursor c = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
                                             new String[]{QuoteColumns.SYMBOL}, QuoteColumns.SYMBOL + "= ?",
-                                            //new String[] { input.toString() }, null);
                                             new String[]{inputToUpper}, null);
                                     if (c.getCount() != 0) {
                                         Toast toast =
@@ -143,7 +142,6 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                                         toast.show();
                                         return;
                                     } else {
-                                        Log.d(LOG_TAG, "Add new stock!");
                                         // Add the stock to DB
                                         mServiceIntent.putExtra("tag", TaskTagKind.ADD);
                                         mServiceIntent.putExtra("symbol", input.toString());
@@ -160,13 +158,11 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                                                         Toast toast = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
                                                         toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
                                                         toast.show();
-
                                                     }
                                                 });
 
                                         mServiceIntent.putExtra(RECEIVER, mResultReceiverHelper);
                                         mContext.startService(mServiceIntent);
-
                                     }
                                 }
                             })
@@ -174,7 +170,6 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
                 } else {
                     networkToast();
                 }
-
             }
         });
 
@@ -268,7 +263,6 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Log.d(LOG_TAG, "Shared pref changed! Key is " + key);
         if (key.compareTo(getString(R.string.pref_stock_status)) == 0) {
             updateEmptyView();
         }
@@ -290,6 +284,4 @@ public class MyStocksFragment extends Fragment implements LoaderManager.LoaderCa
     public interface MyStocksClickListener {
         public void OnStockItemClick(String stockSymbol);
     }
-
-
 }

@@ -30,11 +30,19 @@ import static java.lang.Float.parseFloat;
 /**
  * Created by sam_chordas on 10/8/15.
  */
+/*
+    Updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Add validation to give the user feedback if there are no data for the searched symbol.
+    * Add Stock search status codes for Error handling.
+    * Modify to handle Exceptions thrown if 'null' is parsed.
+    * Add Historical codes that are modeled after starting-code.
+ */
 public class Utils {
 
     private static String LOG_TAG = Utils.class.getSimpleName();
 
     public static boolean showPercent = true;
+    private static String NO_VALUE = "--"; // If empty or null found.  Displayed in the main UI when a value is unavailable.
 
     public static ArrayList quoteJsonToContentVals(String JSON) throws JSONException {
         ArrayList<ContentProviderOperation> batchOperations = new ArrayList<>();
@@ -60,7 +68,7 @@ public class Utils {
                             jsonObject = resultsArray.getJSONObject(i);
                             if (!validateStock(jsonObject)) {
                                 Log.e(LOG_TAG, "Validation failed, Not added this stock: " + jsonObject.getString("symbol"));
-                                continue;     // Not sure if not adding to the operations is a good way, so at least write the Error Log
+                                continue;   // Cannot add invalid data.  User is notified via Toast message.
                             }
                             batchOperations.add(buildBatchOperation(jsonObject));
                         }
@@ -68,7 +76,7 @@ public class Utils {
                 }
             }
         } catch (JSONException e) {
-            Log.e(LOG_TAG, "String to JSON failed: " + e);
+            Log.e(LOG_TAG, "JSON parsing failed: " + e);
             throw e;
         } catch (Exception e) {
             Log.e(LOG_TAG, "Something went wrong, could not apply batch ops. " + e);
@@ -78,13 +86,10 @@ public class Utils {
 
     /*
         The app displays Bid price, Change in percent and Change.
-        If all three fields are null, the app has no information to show, we will inform the user the stock symbol
-        could not be found in a Toast message.
-
+        If all three fields are null, the app has no information to show so we consider our validation failed.
+        The user is informed that the stock symbol could not be found in Toast message.
      */
     private static boolean validateStock(JSONObject jsonObject) {
-        boolean validated = true;
-        String NO_VALUE = "--"; // if empty or null found
 
         try {
             String bid = jsonObject.getString("Bid")==null||"null".equalsIgnoreCase(jsonObject.getString("Bid"))?NO_VALUE:"";
@@ -96,9 +101,11 @@ public class Utils {
                     && NO_VALUE.equalsIgnoreCase(chg)){
                 return false;
             }
+
             return true;
+
         } catch (JSONException ex) {
-            Log.e(LOG_TAG, "Validation failed due to: " + ex);
+            Log.e(LOG_TAG, "Symbol Validation threw: " + ex);
             return false;
         }
     }
@@ -110,10 +117,10 @@ public class Utils {
             bidF = Float.parseFloat(bidPrice);
         } catch (NumberFormatException ex) {
             Log.e(LOG_TAG, "Bid price cannot be found " + ex);
-            return "---";   // Denote Bid price is unavailable currently.
+            return NO_VALUE;   // Denote Bid price is unavailable currently.
         }
 
-        bidPrice = String.format("%.2f", Float.parseFloat(bidPrice));
+        bidPrice = String.format("%.2f", bidF);
         return bidPrice;
     }
 
@@ -139,7 +146,8 @@ public class Utils {
                 QuoteProvider.Quotes.CONTENT_URI);
         try {
             String change = jsonObject.getString("Change");
-        /* We will always save toUpperCase - to identify existing stock symbol to give user input non-case sensitive way */
+
+            /* We will always save toUpperCase - to identify existing stock symbol; user can input both upper and lower cases. */
             builder.withValue(QuoteColumns.SYMBOL, jsonObject.getString("symbol").toUpperCase());
             builder.withValue(QuoteColumns.BIDPRICE, truncateBidPrice(jsonObject.getString("Bid")));
             builder.withValue(QuoteColumns.PERCENT_CHANGE, truncateChange(
@@ -151,7 +159,6 @@ public class Utils {
             } else {
                 builder.withValue(QuoteColumns.ISUP, 1);
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
             throw e;
@@ -164,7 +171,6 @@ public class Utils {
     public static
     @StockTaskService.StockStatusDefinitions
     int getStockStatus(Context context) {
-
         SharedPreferences shp = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (!isConnected(context)) {
@@ -199,7 +205,6 @@ public class Utils {
                         jsonObject = resultsArray.getJSONObject(i);
                         batchOperations.add(historicalBatchOperation(jsonObject));
                     }
-
                 }
             }
         } catch (JSONException e) {
@@ -215,11 +220,11 @@ public class Utils {
         try {
             builder.withValue(HistoricalColumns.SYMBOL, jsonObject.getString("Symbol"));
             builder.withValue(HistoricalColumns.DATE_TEXT, jsonObject.getString("Date"));
-            Log.d(LOG_TAG, "json reply Date: " + jsonObject.getString("Date"));
+
             // HIGH LOW are REALs, using a convenience method to extract the json string to a float of two decimal point floats
             builder.withValue(HistoricalColumns.HIGH, parseFloat(jsonObject.getString("High")));
             builder.withValue(HistoricalColumns.LOW, parseFloat(jsonObject.getString("Low")));
-            // Current Date verify to always provide fresh data starting from today
+            // Set this column to today.  Compare to verify if we can graph up to today.
             builder.withValue(HistoricalColumns.UPDATED_DATE_TEXT, getUpdatedDateText(Calendar.getInstance().getTime()));
         } catch (JSONException e) {
             e.printStackTrace();
@@ -229,44 +234,39 @@ public class Utils {
     }
 
     public static String getUpdatedDateText(Date date){
-        // Current Date verify to always provide fresh data starting from today
         java.text.SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd", Locale.US);
         String dateText = dateFormat.format(date);
-        Log.d(LOG_TAG, "Doing Verify: "+ dateText);
+
         return dateText;
     }
 
     /*
-        This method to return start and end dates in a format specifically used for the yql.
+        This method to return start and end dates in a format specifically used by the yql.
 
         params:
         int daysToSubtract:  number of days to be subtracted from yesterday's date
 
         returns:
-        String [0] is always a startDate, [1] is always an endDate.
+        String [0] is the startDate, [1] is the endDate of the range to the yql request.
      */
     public static String[] formatTimeSpanForApi(int daysToSubtract) {
         String[] returnVal = new String[2];
-        final String API_DATE_FORMAT = "YYYY-MM-dd";  // "YYYY-MM-DD" gave how many days into 366 days, 11/20/2016 was 325.
-        int actualDaysToSubtract = daysToSubtract - 1; // less one than passed in to include the end/start dates.
+        final String API_DATE_FORMAT = "YYYY-MM-dd";    // "YYYY-MM-DD" gave how many days into 366 days, 11/20/2016 was 325.
+        int actualDaysToSubtract = daysToSubtract - 1;  // Subtract one to include the end/start dates.
 
-        /* Set dateFormat we need to use the yql api */
+        /* Format dates that are used by the yql api */
         java.text.SimpleDateFormat apiDateFormat = new SimpleDateFormat(API_DATE_FORMAT, Locale.US);
 
-        /* Calculate historyDate */
+        /* Calculate end date and format */
         Calendar historyDate = Calendar.getInstance();  // Get todate
-        historyDate.add(Calendar.DATE, -1); // set historyDate to be yesterday's date to get the Stock price at market close yesterday
-
-        /* Transform to a String that the api expects */
+        historyDate.add(Calendar.DATE, -1); // Subtract one captures the Stock price at market close yesterday.
         String endDateFormatted = apiDateFormat.format(historyDate.getTime());
-//        Log.d(LOG_TAG, "StockHawk endDate: " + endDateFormatted);
 
+        /* Calculate start date and format */
         historyDate.add(Calendar.DATE, (-actualDaysToSubtract));   // use one less as said above.
-
         String startDateFormatted = apiDateFormat.format(historyDate.getTime());
-//        Log.d(LOG_TAG, "StockHawk startDate: " + startDateFormatted);
 
-        // populate the returnVal array in the right order
+        // populate the returnVal array in the right order.
         returnVal[0] = startDateFormatted;
         returnVal[1] = endDateFormatted;
 

@@ -10,6 +10,11 @@ import android.view.View;
 /**
  * Created by sam_chordas on 11/9/15.
  */
+/*
+    updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Modify onInterceptTouchEvent to return 'false' to detect and handle swipe-delete event
+
+ */
 public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchListener {
     private static final String LOG_TAG = RecyclerViewItemClickListener.class.getSimpleName();
 
@@ -39,10 +44,10 @@ public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchLi
     public boolean onInterceptTouchEvent(RecyclerView view, MotionEvent e) {
         Log.d(LOG_TAG, "onInterceptTouchEvent");
         View childView = view.findChildViewUnder(e.getX(), e.getY());
-//        if (childView != null && listener != null && gestureDetector.onTouchEvent(e)) {
-//            listener.onItemClick(childView, view.getChildPosition(childView));
-//            return true;
-//        }
+        if (childView != null && listener != null && gestureDetector.onTouchEvent(e)) {
+            listener.onItemClick(childView, view.getChildPosition(childView));
+            return true;
+        }
 
         // START
         if (childView != null){

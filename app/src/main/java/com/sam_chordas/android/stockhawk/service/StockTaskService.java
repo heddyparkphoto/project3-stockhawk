@@ -40,6 +40,13 @@ import java.util.ArrayList;
  * The GCMTask service is primarily for periodic tasks. However, OnRunTask can be called directly
  * and is used for the initialization and adding task as well.
  */
+/*
+    Updated by: hyeryungpark for Udacity project: around 11/7/16
+    * Add Historical data fetch request.
+    * Add Error conditon hanlding with Status codes.  Declare IntDef annotations for the status.
+    * Add Notification to Widget codes.
+
+ */
 public class StockTaskService extends GcmTaskService {
     public static final String STOCK_WIDGET_DATA_UPDATED = "com.sam_chordas.android.stockhawk.STOCK_WIDGET_DATA_UPDATED";
 
@@ -79,22 +86,20 @@ public class StockTaskService extends GcmTaskService {
         try {
             if (params.getTag().equals(TaskTagKind.HISTORIC)) {
                 String of_symbol = params.getExtras().getString("symbol_h");
-
                 String[] spanDays = Utils.formatTimeSpanForApi(StockDetailFragment.mPreferenceDays);
-
-                        //StockDetailFragment.SPAN_DAYS);  // Our graph uses 35f data points, so try what looks best
-
                 urlStringBuilder.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
                         + "symbol = \"" + of_symbol + "\" and startDate = \"" + spanDays[0] + "\" and endDate = \"" + spanDays[1] + "\"", "UTF-8"));
 
-//          Log.d(LOG_TAG, "Checking query with dates: " + urlStringBuilder);
-
-//          StringBuilder test = new StringBuilder();
-//          test.append("https://query.yahooapis.com/v1/public/yql?q=");
-//          test.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
-//                + "symbol = \"" + of_symbol + "\" and startDate = \"2015-09-01\" and endDate = \"2016-09-01\"", "UTF-8"));
-//          Log.d(LOG_TAG, "TEST query : " + test);
-
+                /*
+                   Handy test to verify the historical query
+                   -------------------------------------------
+                    StringBuilder test = new StringBuilder();
+                    test.append("https://query.yahooapis.com/v1/public/yql?q=");
+                    test.append(URLEncoder.encode("select Symbol, Date, High, Low from yahoo.finance.historicaldata where "
+                          + "symbol = \"" + of_symbol + "\" and startDate = \"2015-09-01\" and endDate = \"2016-09-01\"", "UTF-8"));
+                    Log.d(LOG_TAG, "TEST query : " + test);
+                   -------------------------------------------
+                */
             } else {
                 urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
                         + "in (", "UTF-8"));
@@ -103,6 +108,7 @@ public class StockTaskService extends GcmTaskService {
             setStockStatus(mContext, STOCK_INVALID_NAME);
             e.printStackTrace();
         }
+
         if (params.getTag().equals(TaskTagKind.INIT) || params.getTag().equals(TaskTagKind.PERIODIC)) {
             isUpdate = true;
             initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
@@ -144,9 +150,10 @@ public class StockTaskService extends GcmTaskService {
                 e.printStackTrace();
             }
         } else if (params.getTag().equals(TaskTagKind.HISTORIC)) {
-            // Nothing more than having appended a paths to the UrlStringBuilder above.
+            // Nothing to append for the historical query
         }
-        // finalize the URL for the API query.
+
+        // Finalize the query.
         urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
                 + "org%2Falltableswithkeys&callback=");
 
@@ -176,14 +183,15 @@ public class StockTaskService extends GcmTaskService {
                     } else {
                         // This insert already existed for the Main screen and Quote DB
 
-                        // Also trying to add invalid stock name from user input somehow....
+                        // Add checkDbOperation check here to capture and inform the user for any error conditions.
                         ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
                         if (params.getTag().equals(TaskTagKind.ADD) && (checkDbOperation == null || checkDbOperation.isEmpty())) {
-                            Log.d(LOG_TAG, "INVALID STOCK NAME. Response was: " + getResponse);
-                            //ADD operation failed, return result to the StockIntentService
+                            //ADD failed, Log and return Failure code to the StockIntentService
+                            Log.i(LOG_TAG, "INVALID STOCK NAME. Response was: " + getResponse);
                             return MyStocksFragment.ADD_FAILED;
                         }
 
+                        // If reached here, there are no errors.  Continue normally.
                         mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
                                 checkDbOperation);
                     }
@@ -191,7 +199,7 @@ public class StockTaskService extends GcmTaskService {
                     Log.e(LOG_TAG, "Error applying batch insert", e);
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, "Error Response returned threw JSONException", e);
-                    return -88;
+                    return -1;
                 }
             } catch (IOException e) {
                 setStockStatus(mContext, STOCK_INVALID_SERVER);
@@ -199,9 +207,10 @@ public class StockTaskService extends GcmTaskService {
             }
         }
 
-    /*
-        Widget - Notify the WidgetMainProvider through WidgetMainService action
-     */
+        /*
+           Database has been changed.
+           Notify the WidgetMainProvider through WidgetMainService action.
+        */
         Intent intent = new Intent(STOCK_WIDGET_DATA_UPDATED).setPackage(mContext.getPackageName());
         mContext.sendBroadcast(intent);
 
@@ -209,7 +218,7 @@ public class StockTaskService extends GcmTaskService {
     }
 
     /*
-      EmptyView: Provide Detailed info to help the user what went wrong when showing an empty screen.
+      For UI EmptyView: Provide Detailed info to help the user what went wrong when showing an empty screen.
      */
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({STOCK_STATUS_OK, STOCK_INVALID_NAME, STOCK_STATUS_NOT_CONNECTED, STOCK_INVALID_SERVER, STOCK_STATUS_UNKNOWN})

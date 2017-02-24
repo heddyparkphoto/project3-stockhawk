@@ -5,6 +5,8 @@ import net.simonvt.schematic.annotation.Table;
 
 /**
  * Created by hyeryungpark on 11/7/16.
+ *
+ * Database used to graph change in stock price over time.
  */
 @Database(version=HistoricalDatabase.VERSION)
 public class HistoricalDatabase {
