@@ -281,7 +281,8 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         }
 
         Description desc = new Description();
-        desc.setText(this.getString(R.string.a11y_graph_name));
+        String graphName = String.format(this.getString(R.string.a11y_graph_name), String.valueOf(mPreferenceDays));
+        desc.setText(graphName);
         mLineChart.setDescription(desc);
 
         XAxis xaxis = mLineChart.getXAxis();
@@ -298,14 +299,21 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
      */
     private String shortenDate(String date) {
         String localD = date;
+        String year = "";
 
         if (date == null || date.length() < 6) {
             return localD;
         }
 
+        // if over a year, append '/yy'
+        if (mPreferenceDays > 300){
+            year = "/".concat(localD.substring(2,4));
+        }
+
         // Remove the year, and use '/' between the month and date
         localD = (localD.substring(5)).replace("-", "/");
-        return localD;
+
+        return localD.concat(year);
     }
 
     @Override

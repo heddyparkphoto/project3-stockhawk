@@ -3,6 +3,6 @@
           android:id="@+id/fragment_my_stocks"
           android:name="com.sam_chordas.android.stockhawk.ui.MyStocksFragment"
           android:layout_width="match_parent"
-          android:layout_height="wrap_content"
+          android:layout_height="match_parent"
           tools:context="com.sam_chordas.android.stockhawk.ui.MyStocksFragment"
  />

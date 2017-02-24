@@ -25,6 +25,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import static java.lang.Float.parseFloat;
+
 /**
  * Created by sam_chordas on 10/8/15.
  */
@@ -74,21 +76,43 @@ public class Utils {
         return batchOperations;
     }
 
+    /*
+        The app displays Bid price, Change in percent and Change.
+        If all three fields are null, the app has no information to show, we will inform the user the stock symbol
+        could not be found in a Toast message.
+
+     */
     private static boolean validateStock(JSONObject jsonObject) {
+        boolean validated = true;
+        String NO_VALUE = "--"; // if empty or null found
 
         try {
-            Float.parseFloat(jsonObject.getString("Bid"));
+            String bid = jsonObject.getString("Bid")==null||"null".equalsIgnoreCase(jsonObject.getString("Bid"))?NO_VALUE:"";
+            String cip = jsonObject.getString("ChangeinPercent")==null||"null".equalsIgnoreCase(jsonObject.getString("ChangeinPercent"))?NO_VALUE:"";
+            String chg = jsonObject.getString("Change")==null||"null".equalsIgnoreCase(jsonObject.getString("Change"))?NO_VALUE:"";
+
+            if (NO_VALUE.equalsIgnoreCase(bid)
+                    && NO_VALUE.equalsIgnoreCase(cip)
+                    && NO_VALUE.equalsIgnoreCase(chg)){
+                return false;
+            }
             return true;
-        } catch (JSONException | NumberFormatException ex) {
-            Log.e(LOG_TAG, "Validation failed! " + ex);
+        } catch (JSONException ex) {
+            Log.e(LOG_TAG, "Validation failed due to: " + ex);
             return false;
         }
     }
 
     public static String truncateBidPrice(String bidPrice) {
-//    if (null==bidPrice || "null".equalsIgnoreCase(bidPrice)){
-//      bidPrice = "0";
-//    }
+
+        float bidF;
+        try {
+            bidF = Float.parseFloat(bidPrice);
+        } catch (NumberFormatException ex) {
+            Log.e(LOG_TAG, "Bid price cannot be found " + ex);
+            return "---";   // Denote Bid price is unavailable currently.
+        }
+
         bidPrice = String.format("%.2f", Float.parseFloat(bidPrice));
         return bidPrice;
     }
@@ -193,8 +217,8 @@ public class Utils {
             builder.withValue(HistoricalColumns.DATE_TEXT, jsonObject.getString("Date"));
             Log.d(LOG_TAG, "json reply Date: " + jsonObject.getString("Date"));
             // HIGH LOW are REALs, using a convenience method to extract the json string to a float of two decimal point floats
-            builder.withValue(HistoricalColumns.HIGH, Float.parseFloat(jsonObject.getString("High")));
-            builder.withValue(HistoricalColumns.LOW, Float.parseFloat(jsonObject.getString("Low")));
+            builder.withValue(HistoricalColumns.HIGH, parseFloat(jsonObject.getString("High")));
+            builder.withValue(HistoricalColumns.LOW, parseFloat(jsonObject.getString("Low")));
             // Current Date verify to always provide fresh data starting from today
             builder.withValue(HistoricalColumns.UPDATED_DATE_TEXT, getUpdatedDateText(Calendar.getInstance().getTime()));
         } catch (JSONException e) {

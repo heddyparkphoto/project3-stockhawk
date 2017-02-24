@@ -7,19 +7,21 @@
               android:padding="@dimen/widget_margin"
     >
     <!--Action bar-->
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/widget_title_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/title_dark_grey">
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginRight="@dimen/widget_left_padding_big"
+        android:layout_marginEnd="@dimen/widget_left_padding_big"
+        >
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/app_name"
-            android:layout_gravity="start"
-            android:gravity="start"
-            android:layout_marginLeft="@dimen/widget_left_padding"
-            android:layout_marginStart="@dimen/widget_left_padding"
+            android:layout_marginRight="@dimen/widget_space"
+            android:layout_marginEnd="@dimen/widget_space"
             android:src="@mipmap/ic_launcher"
             />
         <TextView
@@ -27,28 +29,27 @@
             android:layout_height="wrap_content"
             android:text="@string/app_name"
             android:contentDescription="@string/app_name"
-            android:textColor="@color/title_ligt_grey"
+            android:textColor="@color/bright_white"
             android:fontFamily="sans-serif"
-            android:textAppearance="?android:textAppearanceMedium"
-            android:layout_gravity="center"
-            android:gravity="center"
+            android:textAppearance="?android:textAppearanceSmall"
+            android:textStyle="bold"
+            android:layout_gravity="bottom"
+            android:paddingBottom="@dimen/widget_space"
             />
-    </FrameLayout>
+    </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/widget_margin"
     >
-
-    <StackView
-        android:id="@+id/widget_id_stack"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:loopViews="true"
-        tools:listitem="@layout/widget_stack_layout"
-        android:contentDescription="@string/a11y_stock_widget"
-        />
+        <StackView
+            android:id="@+id/widget_id_stack"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:loopViews="true"
+            tools:listitem="@layout/widget_stack_layout"
+            android:contentDescription="@string/a11y_stock_widget"
+            />
     </FrameLayout>
 </LinearLayout>

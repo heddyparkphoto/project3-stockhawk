@@ -7,7 +7,6 @@
         <item>3 months</item>
         <item>6 months</item>
         <item>1 year</item>
-        <item>2 years</item>
     </string-array>
 
     <string-array name="day_values_to_save">
@@ -16,7 +15,6 @@
         <item>92</item>
         <item>184</item>
         <item>366</item>
-        <item>730</item>
     </string-array>
 
 </resources>

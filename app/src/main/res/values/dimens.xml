@@ -19,5 +19,7 @@
     <dimen name="widget_title_height">4dp</dimen>
     <dimen name="padding_min">10dp</dimen>
     <dimen name="widget_left_padding">12dp</dimen>
+    <dimen name="widget_left_padding_big">40dp</dimen>
+    <dimen name="widget_space">4dp</dimen>
 
 </resources>
