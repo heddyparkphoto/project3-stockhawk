@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-
     android:background="#ffee00"
     >
     <TextView
@@ -14,9 +13,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:paddingLeft="4dp"
-        android:paddingStart="4dp"
-        android:gravity="left|center_vertical"
+        android:paddingLeft="@dimen/widget_margin"
+        android:paddingStart="@dimen/widget_margin"
+        android:gravity="start|center_vertical"
         tools:text="GOOG"
         android:contentDescription="@string/a11y_widget_stock_symbol"
         />
@@ -24,10 +23,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="2"
-        android:gravity="right"
+        android:gravity="end"
         android:orientation="horizontal"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
+        android:paddingStart="@dimen/widget_margin"
+        android:paddingEnd="@dimen/widget_margin"
         >
         <TextView
             android:id="@+id/widget_bid_price"
@@ -36,9 +35,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:paddingRight="4dp"
-            android:paddingEnd="4dp"
+            android:paddingRight="@dimen/widget_margin"
+            android:paddingEnd="@dimen/widget_margin"
             tools:text="1000.00"
+            android:contentDescription="@string/a11y_widget_stock_price"
             />
         <TextView
             android:id="@+id/widget_change"
@@ -49,10 +49,9 @@
             android:layout_weight="1"
             android:gravity="center"
             tools:text="100%"
-
-            android:paddingStart="3dp"
-            android:paddingEnd="3dp"
-
+            android:paddingStart="@dimen/space_tiny"
+            android:paddingEnd="@dimen/space_tiny"
+            android:contentDescription="@string/a11y_widget_stock_price_change"
             />
     </LinearLayout>
 </LinearLayout>

@@ -97,6 +97,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         }
     }
 
+
     @Override
     public void onItemDismiss(int position) {
         Cursor c = getCursor();
@@ -148,6 +149,6 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     }
 
     private void notifyStockRemoved() {
-        ((MyStocksFragment.MyStocksClickListener)mContext).OnStockItemClick(MyStocksActivity.REMOVED_FLAG);
+        ((MyStocksFragment.MyStocksClickListener)mContext).OnStockItemClick(MyStocksActivity.ADDED_FLAG);
     }
 }

@@ -13,7 +13,6 @@ import com.sam_chordas.android.stockhawk.R;
 public class StockDetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = StockDetailActivity.class.getSimpleName();
-    public final static String LABEL = "Chart for stock";
     public static final String OF_STOCK_SYMBOL = "OF_STOCK";
 
     @Override
@@ -25,7 +24,7 @@ public class StockDetailActivity extends AppCompatActivity {
 
             // Following code during Refactoring of DetailFragment to its own class
             Bundle args = new Bundle();
-            // in order to de-couple from either MainActivity or DetailActivity use bundle arguments
+            // in order to de-couple from either Main Stock Activity or DetailActivity use bundle arguments
             args.putString(StockDetailFragment.DETAIL_ARGUMENT, getIntent().getStringExtra(OF_STOCK_SYMBOL));
 
             StockDetailFragment df = new StockDetailFragment();
@@ -36,7 +35,7 @@ public class StockDetailActivity extends AppCompatActivity {
                     .commit();
         }
 
-        Log.d(LOG_TAG, "Intent is null. Cannot get symbol to look up.");
+        Log.i(LOG_TAG, "Intent is null. Cannot get symbol to look up.");
     }
 
     @Override

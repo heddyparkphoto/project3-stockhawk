@@ -1,10 +1,9 @@
 <resources>
-
-        <!-- Base application theme. -->
-        <style name="AppTheme" parent="Theme.AppCompat">
-            <item name="colorPrimary">@color/material_blue_500</item>
-            <item name="colorPrimaryDark">@color/material_blue_700</item>
-        </style>
+     <!-- Base application theme. -->
+     <style name="AppTheme" parent="Theme.AppCompat">
+         <item name="colorPrimary">@color/material_blue_500</item>
+         <item name="colorPrimaryDark">@color/material_blue_700</item>
+     </style>
 
     <!-- Used in AndroidManifest - Currently same as AppTheme -->
     <style name="AppTheme.Main" parent="AppTheme">
@@ -15,26 +14,25 @@
     </style>
 
     <style name="PercentChangeTextStyle">
-            <item name="android:textSize">20sp</item>
-            <item name="android:textColor">#FFF</item>
-            <item name="android:textStyle">bold</item>
-        </style>
-        <style name="BidPriceTextStyle">
-            <item name="android:textSize">20sp</item>
-        </style>
-        <style name="StockSymbolTextStyle">
-            <item name="android:textSize">25sp</item>
-            <item name="android:textAllCaps">true</item>
-        </style>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#FFF</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="BidPriceTextStyle">
+        <item name="android:textSize">20sp</item>
+    </style>
+    <style name="StockSymbolTextStyle">
+        <item name="android:textSize">25sp</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
 
-        <!--Larger text sizes for curly languages in general-->
-        <style name="PercentChangeTextStyleLarge">
-            <item name="android:textSize">24sp</item>
-            <item name="android:textColor">#FFF</item>
-            <item name="android:textStyle">bold</item>
-        </style>
-        <style name="BidPriceTextStyleLarge">
-            <item name="android:textSize">24sp</item>
-        </style>
-
+    <!--Larger text sizes for curly languages in general-->
+    <style name="PercentChangeTextStyleLarge">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">#FFF</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="BidPriceTextStyleLarge">
+        <item name="android:textSize">24sp</item>
+    </style>
 </resources>

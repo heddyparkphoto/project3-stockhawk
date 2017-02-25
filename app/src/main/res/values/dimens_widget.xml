@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="widget_margin">4dp</dimen>
-
+    <dimen name="widget_title_height">4dp</dimen>
+    <dimen name="widget_left_padding">12dp</dimen>
+    <dimen name="widget_left_padding_big">40dp</dimen>
 </resources>

@@ -47,9 +47,11 @@ public class StockIntentService extends IntentService {
         int result =stockTaskService.onRunTask(new TaskParams(intent.getStringExtra("tag"), args));
 
         // Activity would like to handle the result if "add" operation fails
-        if (receiver!=null && result == MyStocksFragment.ADD_FAILED){
-            bundle.putString(Intent.EXTRA_TEXT, "Add a stock failed!");
-            receiver.send(StockTaskService.STOCK_INVALID_NAME, bundle);
+        if (receiver!=null) {
+            if (result == MyStocksFragment.ADD_FAILED) {
+                bundle.putString(Intent.EXTRA_TEXT, "Add a stock failed!");
+                receiver.send(StockTaskService.STOCK_INVALID_NAME, bundle);
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
@@ -32,7 +33,6 @@ import com.sam_chordas.android.stockhawk.data.HistoricalColumns;
 import com.sam_chordas.android.stockhawk.data.HistoricalProvider;
 import com.sam_chordas.android.stockhawk.data.QuoteColumns;
 import com.sam_chordas.android.stockhawk.data.QuoteProvider;
-import com.sam_chordas.android.stockhawk.rest.QuoteCursorAdapter;
 import com.sam_chordas.android.stockhawk.rest.Utils;
 import com.sam_chordas.android.stockhawk.service.StockIntentService;
 import com.sam_chordas.android.stockhawk.service.TaskTagKind;
@@ -47,10 +47,8 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
     private static final String LOG_TAG = StockDetailFragment.class.getSimpleName();
     public final static String DETAIL_ARGUMENT = "DETAIL_ARGUMENT";
-    View mRootView;
+    private View mRootView;
 
-    public static final String OF_STOCK_SYMBOL = "OF_STOCK";
-    public static final int SPAN_DAYS = 14;
     public static int mPreferenceDays;
     private static int oldPreferenceDays;
 
@@ -59,7 +57,6 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     private String mOfSymbol;
     private LineChart mLineChart;
     private TextView mStockTitle;
-    private QuoteCursorAdapter mQuoteCursorAdapter;
     private boolean mRefresh;
     private final static String STOCK_SYMBOL_PLACTHOLDER = "";  // Default title when no data
 
@@ -126,7 +123,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         /* The condition where default stock is used.  They both can occur in Two-pane mode
          * if Refresh is needed because the user just swiped/deleted a stock in the master panel
          * or
-         * it is a first screen and the user did not picked any stocks in the master panel yet.
+         * it is a first screen and the user had not picked any stocks in the master panel yet.
          */
         if (mRefresh || null==bundle){
             Cursor c = context.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
@@ -229,10 +226,16 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
             if (mLineChart != null) {
                 if (Utils.isConnected(getActivity())) {
-                    mLineChart.setNoDataText(getString(R.string.linechart_no_data));
+                    if (STOCK_SYMBOL_PLACTHOLDER.equalsIgnoreCase(mOfSymbol)){
+                        mLineChart.setNoDataText(getString(R.string.linechart_ui_message));
+                    } else {
+                        mLineChart.setNoDataText(getString(R.string.linechart_no_data));
+                    }
                 } else {
                     mLineChart.setNoDataText(getString(R.string.linechart_default));
                 }
+                mLineChart.setNoDataTextColor(getResources().getColor(R.color.material_red_700));
+                mLineChart.setNoDataTextTypeface(Typeface.SANS_SERIF);
                 mLineChart.invalidate();
             }
             return;

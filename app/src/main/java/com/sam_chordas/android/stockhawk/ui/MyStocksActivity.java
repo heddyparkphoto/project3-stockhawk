@@ -37,11 +37,10 @@ public class MyStocksActivity extends AppCompatActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
-    private Intent mServiceIntent;
     private Context mContext;
     boolean isConnected;
-    private static String mNewStockName;
     public static String REMOVED_FLAG = "REMOVED";
+    public static String ADDED_FLAG = "ADDED";
 
     // Tablet variables
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
@@ -158,17 +157,4 @@ public class MyStocksActivity extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
-    /*
-
-    2years worth, very long response that worked about AAPL
-
-    http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20%3D%20%22AAPL%22%20and%20startDate%20%3D%20%222012-09-11%22%20and%20endDate%20%3D%20%222014-02-11%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=
-
-     */
-
-    /*
-        This worked for retreiving only one price ('Close') column
-
-        http://query.yahooapis.com/v1/public/yql?q=select%20Close%20from%20yahoo.finance.historicaldata%20where%20symbol%20%3D%20%22AAPL%22%20and%20startDate%20%3D%20%222016-09-11%22%20and%20endDate%20%3D%20%222016-11-04%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=
-     */
 }
