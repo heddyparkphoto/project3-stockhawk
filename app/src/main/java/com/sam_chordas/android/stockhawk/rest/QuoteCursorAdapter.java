@@ -149,6 +149,6 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     }
 
     private void notifyStockRemoved() {
-        ((MyStocksFragment.MyStocksClickListener)mContext).OnStockItemClick(MyStocksActivity.ADDED_FLAG);
+        ((MyStocksFragment.MyStocksClickListener)mContext).OnStockItemClick(MyStocksActivity.REMOVED_FLAG);
     }
 }

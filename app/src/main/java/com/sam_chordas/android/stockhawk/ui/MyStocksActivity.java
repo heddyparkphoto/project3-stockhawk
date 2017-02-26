@@ -40,7 +40,6 @@ public class MyStocksActivity extends AppCompatActivity
     private Context mContext;
     boolean isConnected;
     public static String REMOVED_FLAG = "REMOVED";
-    public static String ADDED_FLAG = "ADDED";
 
     // Tablet variables
     private static final String DETAILFRAGMENT_TAG = "DFTAG";

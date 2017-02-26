@@ -27,7 +27,8 @@
         style="@style/BidPriceTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingRight="@dimen/padding_min"
+        android:paddingStart="@dimen/padding_min"
+        android:paddingEnd="@dimen/padding_min"
         tools:text="1000.00"
         />
     <TextView
@@ -36,8 +37,8 @@
         style="@style/PercentChangeTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="@dimen/space_tiny"
-        android:paddingRight="@dimen/space_tiny"
+        android:paddingStart="@dimen/space_tiny"
+        android:paddingEnd="@dimen/space_tiny"
         tools:text="100%"
         />
   </LinearLayout>
