@@ -14,7 +14,7 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:gravity="start|center_vertical"
-      tools:text="GOOG"
+      tools:text="@string/default_symbol_text"
       />
   <LinearLayout
       android:layout_width="0dp"
@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/padding_min"
         android:paddingEnd="@dimen/padding_min"
-        tools:text="1000.00"
+        tools:text="@string/default_bid_price"
         />
     <TextView
         android:id="@+id/change"
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/space_tiny"
         android:paddingEnd="@dimen/space_tiny"
-        tools:text="100%"
+        tools:text="@string/default_change_100"
         />
   </LinearLayout>
 </LinearLayout>

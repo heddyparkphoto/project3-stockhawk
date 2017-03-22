@@ -1,6 +1,6 @@
 <resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
 
-    <string name="app_name">Stock Hawk</string>
+    <string name="app_name" translatable="false">Stock Hawk</string>
     <string name="action_example">Example action</string>
     <string name="action_settings">Settings</string>
     <string name="title_settings">My Settings</string>
@@ -20,7 +20,7 @@
     <string name="linechart_no_data">Loading data momentarily ...</string>
     <string name="stock_not_found">Stock name %s could not be found.</string>
     <string name="linechart_default">No network connection to chart data</string>
-    <string name="title_widget_stack_layout">Stock Hawk</string>
+    <string name="title_widget_stack_layout" translatable="false">Stock Hawk</string>
     <string name="a11y_add_a_stock">Add a stock</string>
     <string name="a11y_widget_stock_symbol">stock symbol name</string>
     <string name="a11y_empty_stocks_list">Empty Stocks View</string>
@@ -36,5 +36,10 @@
     <string name="pref_historic_days_title">Days To Graph</string>
     <string name="pref_historic_key" translatable="false">pref_history_days</string>
     <string name="linechart_ui_message">Select a stock to view the price change over time.</string>
+
+    <!-- Place holder strings -->
+    <string name="default_symbol_text" translatable="false">GOOG</string>
+    <string name="default_bid_price">1000.00</string>
+    <string name="default_change_100">100%</string>
 
 </resources>
