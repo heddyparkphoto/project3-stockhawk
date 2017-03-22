@@ -71,7 +71,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         oldPreferenceDays = mPreferenceDays;
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String pref_span_days = shared.getString(getString(R.string.pref_historic_key), "14");
+        String pref_span_days = shared.getString(getString(R.string.pref_historic_key), getString(R.string.default_change_over14days));
 
         mPreferenceDays = Integer.parseInt(pref_span_days);
 
