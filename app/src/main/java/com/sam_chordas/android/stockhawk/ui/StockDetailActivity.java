@@ -22,8 +22,7 @@ public class StockDetailActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
 
-            // Following code during Refactoring of DetailFragment to its own class
-            Bundle args = new Bundle();
+             Bundle args = new Bundle();
             // in order to de-couple from either Main Stock Activity or DetailActivity use bundle arguments
             args.putString(StockDetailFragment.DETAIL_ARGUMENT, getIntent().getStringExtra(OF_STOCK_SYMBOL));
 
@@ -37,15 +36,4 @@ public class StockDetailActivity extends AppCompatActivity {
 
         Log.i(LOG_TAG, "Intent is null. Cannot get symbol to look up.");
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        /*
-         We want to initialize and refresh (invalidate() seems to does that according to authors
-         every time here instead of onCreate() which only occurs once.
-        */
-    }
-
 }

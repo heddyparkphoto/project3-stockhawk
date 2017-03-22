@@ -91,11 +91,6 @@ public class WidgetMainService extends RemoteViewsService {
                 views.setTextViewText(R.id.widget_bid_price, priceTxt);
                 views.setTextViewText(R.id.widget_change, changeTxt);
 
-                /*
-                    !!!!!! This click intent still not working.... it doesn't fire, plus one time it crashed.
-                    MORE WORK NEEDED, for now, I am satisfied!  Big day - yesterday and today having actually
-                    somewhat implemented the Widget collection
-                 */
                 final Intent fillInIntent = new Intent();
 
                 fillInIntent.putExtra(StockDetailActivity.OF_STOCK_SYMBOL, symbolTxt);
@@ -116,12 +111,7 @@ public class WidgetMainService extends RemoteViewsService {
 
             @Override
             public long getItemId(int position) {
-                // Something's not working ...with using the row, come back later!!!
-//                if (data.moveToPosition(position)){
-//                    return Long.valueOf(data.getString(QuoteColumns._ID));
-//                } else {
-                    return position;
-//                }
+                return position;
             }
 
             @Override

@@ -2,7 +2,6 @@ package com.sam_chordas.android.stockhawk.rest;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -52,6 +51,5 @@ public class RecyclerViewItemClickListener implements RecyclerView.OnItemTouchLi
 
     @Override
     public void onTouchEvent(RecyclerView view, MotionEvent motionEvent) {
-        Log.d(LOG_TAG, "onTouchEvent");
     }
 }

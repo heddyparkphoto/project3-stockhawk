@@ -30,7 +30,7 @@ public class MyPreferenceFragment extends PreferenceFragment
         // Trigger the listener right away what is saved in the file
         onPreferenceChange(preference,
                 PreferenceManager.getDefaultSharedPreferences(
-                        preference.getContext()).getString(preference.getKey(), "14")
+                        preference.getContext()).getString(preference.getKey(), getString(R.string.default_change_over14days))
                 );
     }
 

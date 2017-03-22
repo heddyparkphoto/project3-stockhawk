@@ -182,7 +182,6 @@ public class StockTaskService extends GcmTaskService {
                                 Utils.historicalJsonContentVals(getResponse));
                     } else {
                         // This insert already existed for the Main screen and Quote DB
-
                         // Add checkDbOperation check here to capture and inform the user for any error conditions.
                         ArrayList checkDbOperation = Utils.quoteJsonToContentVals(getResponse);
                         if (params.getTag().equals(TaskTagKind.ADD) && (checkDbOperation == null || checkDbOperation.isEmpty())) {
@@ -239,7 +238,7 @@ public class StockTaskService extends GcmTaskService {
     }
 
     /*
-    Sample url-encoded string to test historical data
+    Handy sample url-encoded string to test historical data
 
     http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20
     where%20symbol%20%3D%20%22AAPL%22%20and%20startDate%20%3D%20%222012-09-11%22%20and%20endDate%20%3D%20%222014-02-11

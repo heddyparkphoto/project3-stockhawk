@@ -71,9 +71,6 @@ public class MyStocksActivity extends AppCompatActivity
             }
         } else {
             mTwoPane = false;
-
-            // Coded during Styling the Action bar - remove casted-shadow for onePane device
-//            getSupportActionBar().setElevation(0f);
         }
 
         // Manage preferences

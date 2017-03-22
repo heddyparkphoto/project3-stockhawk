@@ -13,7 +13,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,10 +63,6 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.fragment_line_graph, container, false);
-
-//        View rootView = inflater.inflate(R.layout.fragment_line_graph, container, false);
-
-//        mLineChart = (LineChart) rootView.findViewById(R.id.linechart);
         mLineChart = (LineChart) mRootView.findViewById(R.id.linechart);
         mLineChart.invalidate();
 
@@ -77,12 +72,9 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String pref_span_days = shared.getString(getString(R.string.pref_historic_key), "14");
-        Log.d(LOG_TAG, "Old pref days "+oldPreferenceDays);
+
         mPreferenceDays = Integer.parseInt(pref_span_days);
-        Log.d(LOG_TAG, "After pref days "+mPreferenceDays);
 
-
-//        return rootView;
         return mRootView;
     }
 
@@ -106,11 +98,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
-//        if (mLineChart!=null){
-//            Log.d(LOG_TAG, "onLoaderReset - mLineChart is not null.");
-//            mLineChart.clearValues();
-//        }
+        // Nothing to do
     }
 
     @Override
@@ -136,7 +124,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
             }
         } else {
             if (bundle != null) {
-                mOfSymbol = bundle.getString(StockDetailFragment.DETAIL_ARGUMENT, "SBUX"); //just for test for now.
+                mOfSymbol = bundle.getString(StockDetailFragment.DETAIL_ARGUMENT, getString(R.string.default_symbol_text));
             }
         }
 
@@ -151,7 +139,6 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         }
 
         // Make sure the history of the stock doesn't already exist in the DB
-        // NOTE: Later, in Phase 2, I should implement to refresh data if data is old.  For now, I am content.
         boolean shouldRefetch = true;
         Cursor cursor = context.getContentResolver().query(HistoricalProvider.Historical.historicalOfSymbol(mOfSymbol),
                 null, HistoricalColumns.SYMBOL + "= ?",
@@ -179,27 +166,14 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
              */
 
             getLoaderManager().initLoader(HISTORICAL_CURSOR_LOADER, null, this);
-                // delete old data
-//                getActivity().getContentResolver().delete(HistoricalProvider.Historical.CONTENT_URI,
-//                        HistoricalColumns.SYMBOL + "= ?",
-//                        new String[]{mOfSymbol});
-//
+
             mServiceIntent = new Intent(context, StockIntentService.class);
-            /*  The tag and the key/value that I refactor-ed the existing methods
-                to process the new yql queries to get what we want: historical data
-            */
             mServiceIntent.putExtra("tag", TaskTagKind.HISTORIC);
             mServiceIntent.putExtra("symbol_h", mOfSymbol);
             context.startService(mServiceIntent);
         } else {
             Toast.makeText(context, getString(R.string.empty_network_not_connected), Toast.LENGTH_LONG).show();
         }
-//            }
-//        }
-//            } else {
-//                Log.d(LOG_TAG, "Intent and bundle is null. Cannot get symbol to look up.");
-//            }
-//        }
 
         super.onActivityCreated(savedInstanceState);
     }
@@ -246,7 +220,7 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
         float x = 0f;
 
         if (cursor.moveToPosition(newFirstPosition)) {
-            while (cursor.moveToNext()) { //moveToNext()) {
+            while (cursor.moveToNext()) {
                 if (plotCounter <= mPreferenceDays) {
                     date = cursor.getString(cursor.getColumnIndex(HistoricalColumns.DATE_TEXT));
                     high = cursor.getFloat(cursor.getColumnIndex(HistoricalColumns.HIGH));
@@ -293,7 +267,6 @@ public class StockDetailFragment extends Fragment implements LoaderManager.Loade
 
         //setData to the LineChart by constructing the LineData (xStringArray, LineDataSets)
         mLineChart.setData(new LineData(lineDataSets));
-        //mLineChart.setVisibleXRangeMaximum(35f);    //Comment out if using shorter ranges such as 14 days - experiment on the phone to get good curve
     }
 
     /*
